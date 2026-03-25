@@ -1,0 +1,10 @@
+[project]
+name = "online-ticket-booking-system"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi[standard]>=0.135.2",
+    "pydantic>=2.12.5",
+]
