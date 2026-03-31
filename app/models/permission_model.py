@@ -13,4 +13,4 @@ class PermissionModel(Base):
 
     permission: Mapped[str] = mapped_column(String(50))
 
-    role_permission_list: Mapped[list["RolePermissionMap"]] = relationship(back_populates="permissions")
+    role_permission_list: Mapped[list["RolePermissionMap"]] = relationship(back_populates="permission")
