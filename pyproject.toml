@@ -14,5 +14,6 @@ dependencies = [
     "pytest>=9.0.2",
     "python-jose>=3.5.0",
     "redis>=7.4.0",
+    "requests>=2.33.1",
     "sqlalchemy>=2.0.48",
 ]
