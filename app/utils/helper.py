@@ -7,10 +7,11 @@ from app.core.redis_config import Redis
 from fastapi import HTTPException, status, Response
 from jose import jwt
 from datetime import datetime, timedelta
+import secrets
 
 
 async def generate_otp() -> str:
-    return str(random.randint(100000, 999999))
+    return "".join(secrets.choice("0123456789") for _ in range(6))
 
 
 def send_email(email_content: dict):
@@ -82,13 +83,13 @@ async def decode_jwt(token: str, jwt_secret_key: str) -> dict:
 async def generate_access_token_and_refresh_token(payload: dict, response: Response):
     access_token = await encode_jwt(
         payload=payload,
-        expire_time=str(datetime.now() + timedelta(minutes=int(settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES))),
+        expire_time=str(datetime.now() + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)),
         secret_key=settings.JWT_SECRET_ACCESS_KEY
     )
 
     refresh_token = await encode_jwt(
         payload=payload,
-        expire_time=str(datetime.now() + timedelta(days=int(settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS))),
+        expire_time=str(datetime.now() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)),
         secret_key=settings.JWT_SECRET_REFRESH_KEY
     )
 
