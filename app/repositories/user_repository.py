@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import UserModel, RoleModel
+from app.models import UserModel, UserDetailModel, RoleModel
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 
 class UserRepository:
@@ -8,22 +9,40 @@ class UserRepository:
         self.db = db
 
     async def get_user_by_email_repo(self, email: str) -> UserModel:
+        query = (
+            select(UserModel)
+            .where(UserModel.email == email)
+            .options(selectinload(UserModel.user_detail))
+        )
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
 
-        query = select(UserModel).where(UserModel.email == email)
-        result = await self.db.scalars(query)
-        return result.first()
+    async def create_new_user_repo(
+        self,
+        email: str,
+        google_id: str = None,
+        first_name: str = None,
+        last_name: str = None,
+        role: str = "user",
+    ) -> UserModel:
 
-    async def create_new_user_repo(self, email: str, role: str = "user") -> UserModel:
-        role_query = select(RoleModel).where(RoleModel.role == role)
-        role_result = await self.db.scalars(role_query)
-        role_obj = role_result.first()
+        role_obj = (
+            await self.db.execute(select(RoleModel).where(RoleModel.role == role))
+        ).scalar_one_or_none()
 
         if not role_obj:
-            raise ValueError(f"Role '{role}' not found in database")
+            raise ValueError(f"Role '{role}' not found")
 
-        new_user = UserModel(email=email, is_verified=True, role_id=role_obj.id)
-
+        new_user = UserModel(
+            email=email, google_id=google_id, role_id=role_obj.id, is_active=True
+        )
         self.db.add(new_user)
+        await self.db.flush()
+
+        new_user_details = UserDetailModel(
+            user_id=new_user.id, first_name=first_name, last_name=last_name
+        )
+        self.db.add(new_user_details)
         await self.db.flush()
 
         return new_user

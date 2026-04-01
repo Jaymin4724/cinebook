@@ -51,6 +51,7 @@ class AuthService:
     ) -> ResponseSchema:
         user_email = user_signin_body.get("email")
         user_otp = user_signin_body.get("otp")
+        self.user_repo.db = db
 
         await validate_otp(email=user_email, otp=user_otp, redis=self.redis)
 
@@ -107,11 +108,28 @@ class AuthService:
             )
             user_info = user_info_response.json()
             email = user_info.get("email")
+            google_id = user_info.get("sub")
+            first_name = user_info.get("given_name", None)
+            last_name = user_info.get("family_name", None)
+
+        self.user_repo.db = db
 
         async with db.begin():
             user = await self.user_repo.get_user_by_email_repo(email=email)
             if not user:
-                user = await self.user_repo.create_new_user_repo(email=email)
+                user = await self.user_repo.create_new_user_repo(
+                    email=email,
+                    google_id=google_id,
+                    first_name=first_name,
+                    last_name=last_name,
+                )
+            elif not user.google_id:
+                user.google_id = google_id
+                if user.user_detail:
+                    user.user_detail.first_name = (
+                        user.user_detail.first_name or first_name
+                    )
+                    user.user_detail.last_name = user.user_detail.last_name or last_name
 
             generate_access_token_and_refresh_token(
                 payload={"user_id": str(user.id)}, response=response
