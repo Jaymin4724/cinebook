@@ -28,11 +28,15 @@ GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 
 class AuthService:
 
-    async def auth_send_otp_service(self, email: str, redis: Redis) -> ResponseSchema:
+    def __init__(self, redis: Redis, user_repo: UserRepository):
+        self.redis = redis
+        self.user_repo = user_repo
 
+    async def auth_send_otp_service(self, email: str) -> ResponseSchema:
         otp = await generate_otp()
 
-        await redis.hsetex(name=email, mapping={"otp": otp, "tries": 3}, ex=600)
+        # Use self.redis
+        await self.redis.hsetex(name=email, mapping={"otp": otp, "tries": 3}, ex=600)
 
         send_email(
             email_content={
@@ -44,36 +48,31 @@ class AuthService:
                         <h1>Verify Your Account</h1>
                         <p>Thank you for registering. Please use the following One-Time Password (OTP) to complete your signup:</p>
                         <h2 style="color: #4CAF50;">{otp}</h2>
-                        <p>This code is valid for 10 minutes. If you did not request this, please ignore this email.</p>
+                        <p>This code is valid for 10 minutes.</p>
                     </body>
                 </html>
             """,
             }
         )
-
         return create_response(message="OTP sent to your email")
 
     async def auth_signin_service(
         self,
         user_signin_body: dict,
-        redis: Redis,
         db: AsyncSession,
         response: Response,
-        user_repo: UserRepository,
     ) -> ResponseSchema:
-
         user_email = user_signin_body.get("email")
         user_otp = user_signin_body.get("otp")
 
         is_otp_validated = await validate_otp(
-            email=user_email, otp=user_otp, redis=redis
+            email=user_email, otp=user_otp, redis=self.redis
         )
 
         if is_otp_validated:
-
             async with db.begin():
-                user_found = await user_repo.get_user_by_email_repo(
-                    email=user_email, db=db
+                user_found = await self.user_repo.get_user_by_email_repo(
+                    email=user_email
                 )
 
                 if user_found:
@@ -82,8 +81,8 @@ class AuthService:
                     )
                     return create_response(message="User login successfully")
                 else:
-                    new_user = await user_repo.create_new_user_repo(
-                        email=user_email, db=db
+                    new_user = await self.user_repo.create_new_user_repo(
+                        email=user_email
                     )
                     await generate_access_token_and_refresh_token(
                         payload={"user_id": str(new_user.id)}, response=response
@@ -103,7 +102,7 @@ class AuthService:
         return RedirectResponse(url=url)
 
     async def auth_google_callback_service(
-        self, code: str, db: AsyncSession, response: Response, user_repo: UserRepository
+        self, code: str, db: AsyncSession, response: Response
     ):
         token_data = {
             "code": code,
@@ -112,7 +111,7 @@ class AuthService:
             "redirect_uri": GOOGLE_REDIRECT_URI,
             "grant_type": "authorization_code",
         }
-        print(token_data)
+
         token_response = requests.post(GOOGLE_TOKEN_URL, data=token_data)
         token_json = token_response.json()
 
@@ -122,23 +121,19 @@ class AuthService:
             )
 
         access_token = token_json.get("access_token")
-        print(access_token)
         user_info_response = requests.get(
             GOOGLE_USERINFO_URL, headers={"Authorization": f"Bearer {access_token}"}
         )
         user_info = user_info_response.json()
-
         email = user_info.get("email")
-        # google_id = user_info.get("sub")
-        # name = user_info.get("name")
 
-        user = await user_repo.get_user_by_email_repo(email=email, db=db)
-        print(user)
-        if not user:
-            user = await user_repo.create_new_user_repo(email=email, db=db)
+        async with db.begin():
+            user = await self.user_repo.get_user_by_email_repo(email=email)
+            if not user:
+                user = await self.user_repo.create_new_user_repo(email=email)
 
-        await generate_access_token_and_refresh_token(
-            payload={"user_id": str(user.id)}, response=response
-        )
+            await generate_access_token_and_refresh_token(
+                payload={"user_id": str(user.id)}, response=response
+            )
 
         return create_response(data={"email": user.email}, message="Login successful")

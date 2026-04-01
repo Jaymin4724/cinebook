@@ -1,32 +1,29 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import UserModel, RoleModel
-from sqlalchemy import Select
+from sqlalchemy import select
 
 
 class UserRepository:
+    def __init__(self, db: AsyncSession):
+        self.db = db
 
-    async def get_user_by_email_repo(self, email: str, db: AsyncSession) -> UserModel:
+    async def get_user_by_email_repo(self, email: str) -> UserModel:
 
-        get_user_by_email_query = Select(UserModel).where(UserModel.email == email)
+        query = select(UserModel).where(UserModel.email == email)
+        result = await self.db.scalars(query)
+        return result.first()
 
-        get_user_by_email_query_result = await db.scalars(get_user_by_email_query)
-        get_user_by_email = get_user_by_email_query_result.first()
+    async def create_new_user_repo(self, email: str, role: str = "user") -> UserModel:
+        role_query = select(RoleModel).where(RoleModel.role == role)
+        role_result = await self.db.scalars(role_query)
+        role_obj = role_result.first()
 
-        return get_user_by_email
+        if not role_obj:
+            raise ValueError(f"Role '{role}' not found in database")
 
-    async def create_new_user_repo(
-        self, email: str, db: AsyncSession, role: str = "user"
-    ) -> UserModel:
+        new_user = UserModel(email=email, is_verified=True, role_id=role_obj.id)
 
-        get_user_role_id_query = Select(RoleModel).where(RoleModel.role == role)
-
-        get_user_role_id_query_result = await db.scalars(get_user_role_id_query)
-        get_user_role_id = get_user_role_id_query_result.first()
-
-        new_user = UserModel(email=email, is_verified=True, role_id=get_user_role_id.id)
-
-        db.add(new_user)
-
-        await db.flush()
+        self.db.add(new_user)
+        await self.db.flush()
 
         return new_user
