@@ -1,1 +1,0 @@
-from app.api.v1.auth_routes import auth_router

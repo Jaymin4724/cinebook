@@ -1,103 +1,73 @@
-import random
-import smtplib
-import ssl
-from email.message import EmailMessage
+import secrets
+from datetime import datetime, timedelta, timezone
+from jose import jwt
+from fastapi import Response, HTTPException, status
 from app.core.config import settings
 from app.core.redis_config import Redis
-from fastapi import HTTPException, status, Response
-from jose import jwt
-from datetime import datetime, timedelta
-import secrets
 
-
-async def generate_otp() -> str:
+def generate_otp() -> str:
     return "".join(secrets.choice("0123456789") for _ in range(6))
 
-
-def send_email(email_content: dict):
-    context = ssl.create_default_context()
-    msg = EmailMessage()
-    msg['Subject'] = email_content.get("subject")
-    msg['From'] = settings.SENDER_EMAIL
-    msg['To'] = email_content.get("receiver_email")
-    msg.set_content(email_content.get("body"))
-    if email_content.get("cc"):
-        msg['Cc'] = email_content.get("cc")
-    if email_content.get("bcc"):
-        msg['Bcc'] = email_content.get("bcc")
-    if email_content.get("html_body"):
-        msg.add_alternative(email_content.get("html_body"), subtype="html")
-    with smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT) as smtp:
-        smtp.ehlo()
-        smtp.starttls(context=context)
-        smtp.ehlo()
-        smtp.login(settings.SENDER_EMAIL, settings.EMAIL_APP_KEY)
-        smtp.send_message(msg=msg)
-
-
 async def validate_otp(email: str, otp: str, redis: Redis) -> bool:
-    get_email_from_redis = await redis.hgetall(name=email)
+    cached_data = await redis.hgetall(name=email)
 
-    if get_email_from_redis:
-        tries_left = int(get_email_from_redis.get("tries"))
-        if get_email_from_redis.get("otp") == otp:
-                await redis.delete(email)
-                return True
-        else:
-            new_tries_left = str(tries_left - 1)
-            await redis.hsetex(
-                name=email,key="tries",
-                value=new_tries_left,
-                keepttl=True
-            )
-            if new_tries_left == 0:
-                await redis.delete(email)
-                return HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=f"All tries exhausted")
-            return HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=f"OTP is incorrect {new_tries_left} tries left")
-    return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="OTP not found")
+    if not cached_data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="OTP not found or expired"
+        )
+    
+    stored_otp = cached_data.get("otp")
+    tries_left = int(cached_data.get("tries", 0))
 
-
-async def   encode_jwt(payload: dict, expire_time: datetime, secret_key: str) -> str:
-    token_payload = payload
-    token_payload["expires"] = expire_time
-    token = jwt.encode(
-        token_payload,
-        secret_key, 
-        algorithm=settings.JWT_ALGORITHM
-    )
-    return token
-
-
-async def decode_jwt(token: str, jwt_secret_key: str) -> dict:
-    payload = jwt.decode(
-        token, 
-        jwt_secret_key, 
-        algorithms=[settings.JWT_ALGORITHM]
-    )
-    if payload.get("expires") < datetime.now():
-        return None
-    else:
-        return payload
-
-
-async def generate_access_token_and_refresh_token(payload: dict, response: Response):
-    access_token = await encode_jwt(
-        payload=payload,
-        expire_time=str(datetime.now() + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)),
-        secret_key=settings.JWT_SECRET_ACCESS_KEY
+    if stored_otp == otp:
+        await redis.delete(email)
+        return True
+    
+    new_tries = tries_left - 1
+    if new_tries <= 0:
+        await redis.delete(email)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="All tries exhausted. Please request a new OTP."
+        )
+    
+    await redis.hset(name=email, key="tries", value=str(new_tries))
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=f"Incorrect OTP. {new_tries} tries left."
     )
 
-    refresh_token = await encode_jwt(
-        payload=payload,
-        expire_time=str(datetime.now() + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)),
-        secret_key=settings.JWT_SECRET_REFRESH_KEY
+def _generate_token(
+    data: dict, expires_delta: timedelta, secret: str, token_type: str
+) -> str:
+    to_encode = data.copy()
+
+    if "user_id" in to_encode:
+        to_encode["sub"] = str(to_encode.pop("user_id"))
+    elif "sub" in to_encode and not isinstance(to_encode["sub"], str):
+        to_encode["sub"] = str(to_encode["sub"])
+
+    expire = datetime.now(timezone.utc) + expires_delta
+    to_encode.update({"exp": expire, "type": token_type})
+
+    return jwt.encode(to_encode, secret, algorithm=settings.JWT_ALGORITHM)
+
+
+def generate_access_token_and_refresh_token(payload: dict, response: Response):
+    access_token = _generate_token(
+        data=payload,
+        expires_delta=timedelta(minutes=int(settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)),
+        secret=settings.JWT_SECRET_ACCESS_KEY,
+        token_type="access",
     )
 
-    response.set_cookie(
-        key="access_token", 
-        value=access_token
+    refresh_token = _generate_token(
+        data=payload,
+        expires_delta=timedelta(days=int(settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS)),
+        secret=settings.JWT_SECRET_REFRESH_KEY,
+        token_type="refresh",
     )
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token
-    )
+
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
