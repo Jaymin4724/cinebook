@@ -10,6 +10,6 @@ redis_client = Redis(
 )
 
 
-async def get_redis():
+def get_redis():
     """Provide a Redis client instance for caching and blacklisting refresh tokens."""
     return redis_client

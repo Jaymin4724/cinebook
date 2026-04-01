@@ -1,5 +1,6 @@
 from fastapi import APIRouter, status, Body, Response
 from typing import Annotated
+from fastapi.responses import RedirectResponse
 from pydantic import EmailStr
 
 from app.api.dependencies import DBDep, AuthServiceDep
@@ -36,11 +37,11 @@ async def auth_signin_route(
     )
 
 
-@google_auth_router.get("/login", status_code=status.HTTP_200_OK)
-async def auth_login_google(
+@google_auth_router.get("/login", response_class=RedirectResponse)
+def auth_login_google(
     auth_service: AuthServiceDep,
 ):
-    return await auth_service.auth_login_google_service()
+    return auth_service.auth_login_google_service()
 
 
 @google_auth_router.get(

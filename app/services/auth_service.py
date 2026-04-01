@@ -1,19 +1,19 @@
 from app.schemas.standard_schema import ResponseSchema
-import requests
-from fastapi import Response, HTTPException
+import httpx
+from fastapi import Response, HTTPException, status
 from fastapi.responses import RedirectResponse
+from urllib.parse import urlencode
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.utils.helper import (
-    send_email,
     validate_otp,
     generate_access_token_and_refresh_token,
+    generate_otp,
 )
 
-from urllib.parse import urlencode
+from app.services.email_service import EmailService
 from app.core.redis_config import Redis
-from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.user_repository import UserRepository
-
-from app.utils.helper import generate_otp
 from app.core.config import settings
 from app.schemas.standard_schema import create_response
 
@@ -31,29 +31,16 @@ class AuthService:
     def __init__(self, redis: Redis, user_repo: UserRepository):
         self.redis = redis
         self.user_repo = user_repo
+        self.email_service = EmailService()
 
     async def auth_send_otp_service(self, email: str) -> ResponseSchema:
-        otp = await generate_otp()
+        otp = generate_otp()
 
-        # Use self.redis
-        await self.redis.hsetex(name=email, mapping={"otp": otp, "tries": 3}, ex=600)
+        await self.redis.hset(name=email, mapping={"otp": otp, "tries": 3})
+        await self.redis.expire(email, 600)
 
-        send_email(
-            email_content={
-                "receiver_email": email,
-                "subject": "Signin OTP - Online Ticket Booking System",
-                "body": f"""
-                <html>
-                    <body>
-                        <h1>Verify Your Account</h1>
-                        <p>Thank you for registering. Please use the following One-Time Password (OTP) to complete your signup:</p>
-                        <h2 style="color: #4CAF50;">{otp}</h2>
-                        <p>This code is valid for 10 minutes.</p>
-                    </body>
-                </html>
-            """,
-            }
-        )
+        await self.email_service.send_otp_email(email_to=email, otp=otp)
+
         return create_response(message="OTP sent to your email")
 
     async def auth_signin_service(
@@ -65,31 +52,24 @@ class AuthService:
         user_email = user_signin_body.get("email")
         user_otp = user_signin_body.get("otp")
 
-        is_otp_validated = await validate_otp(
-            email=user_email, otp=user_otp, redis=self.redis
-        )
+        await validate_otp(email=user_email, otp=user_otp, redis=self.redis)
 
-        if is_otp_validated:
-            async with db.begin():
-                user_found = await self.user_repo.get_user_by_email_repo(
-                    email=user_email
+        async with db.begin():
+            user_found = await self.user_repo.get_user_by_email_repo(email=user_email)
+
+            if user_found:
+                generate_access_token_and_refresh_token(
+                    payload={"user_id": str(user_found.id)}, response=response
                 )
+                return create_response(message="User login successfully")
+            else:
+                new_user = await self.user_repo.create_new_user_repo(email=user_email)
+                generate_access_token_and_refresh_token(
+                    payload={"user_id": str(new_user.id)}, response=response
+                )
+                return create_response(message="User created successfully")
 
-                if user_found:
-                    await generate_access_token_and_refresh_token(
-                        payload={"user_id": str(user_found.id)}, response=response
-                    )
-                    return create_response(message="User login successfully")
-                else:
-                    new_user = await self.user_repo.create_new_user_repo(
-                        email=user_email
-                    )
-                    await generate_access_token_and_refresh_token(
-                        payload={"user_id": str(new_user.id)}, response=response
-                    )
-                    return create_response(message="User created successfully")
-
-    async def auth_login_google_service(self):
+    def auth_login_google_service(self):
         params = {
             "client_id": GOOGLE_CLIENT_ID,
             "redirect_uri": GOOGLE_REDIRECT_URI,
@@ -112,27 +92,28 @@ class AuthService:
             "grant_type": "authorization_code",
         }
 
-        token_response = requests.post(GOOGLE_TOKEN_URL, data=token_data)
-        token_json = token_response.json()
+        async with httpx.AsyncClient() as client:
+            token_response = await client.post(GOOGLE_TOKEN_URL, data=token_data)
+            token_json = token_response.json()
+            if token_response.status_code != 200 or "error" in token_json:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=token_json.get("error_description"),
+                )
 
-        if "error" in token_json:
-            raise HTTPException(
-                status_code=400, detail=token_json.get("error_description")
+            access_token = token_json.get("access_token")
+            user_info_response = await client.get(
+                GOOGLE_USERINFO_URL, headers={"Authorization": f"Bearer {access_token}"}
             )
-
-        access_token = token_json.get("access_token")
-        user_info_response = requests.get(
-            GOOGLE_USERINFO_URL, headers={"Authorization": f"Bearer {access_token}"}
-        )
-        user_info = user_info_response.json()
-        email = user_info.get("email")
+            user_info = user_info_response.json()
+            email = user_info.get("email")
 
         async with db.begin():
             user = await self.user_repo.get_user_by_email_repo(email=email)
             if not user:
                 user = await self.user_repo.create_new_user_repo(email=email)
 
-            await generate_access_token_and_refresh_token(
+            generate_access_token_and_refresh_token(
                 payload={"user_id": str(user.id)}, response=response
             )
 

@@ -1,18 +1,20 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import EmailStr
 
 
 class Settings(BaseSettings):
-
     DB_URL: str
     TEST_DB_URL: str
 
     REDIS_HOST: str
     REDIS_PORT: str
+    REDIS_URL: str
 
-    SENDER_EMAIL: str
-    EMAIL_APP_KEY: str
-    SMTP_PORT: int
-    SMTP_SERVER: str
+    MAIL_USERNAME: EmailStr
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+    MAIL_PORT: int = 587
+    MAIL_SERVER: str
 
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int
