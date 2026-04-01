@@ -12,9 +12,16 @@ if TYPE_CHECKING:
 class UserDetailModel(Base):
     __tablename__ = "user_details"
 
-    first_name : Mapped[str] = mapped_column(String(50), nullable=True)
-    last_name : Mapped[str] = mapped_column(String(50), nullable=True)
-    mobile_no : Mapped[str] = mapped_column(String(50), nullable=True)
-    user_id : Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    first_name: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, default=None
+    )
+    last_name: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, default=None
+    )
+    mobile_no: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, default=None
+    )
 
-    user : Mapped["UserModel"] = relationship(back_populates="user_detail")
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
+
+    user: Mapped["UserModel"] = relationship(back_populates="user_detail")
