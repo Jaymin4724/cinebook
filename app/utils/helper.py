@@ -54,6 +54,24 @@ def _generate_token(
     return jwt.encode(to_encode, secret, algorithm=settings.JWT_ALGORITHM)
 
 
+def decode_token(
+    token: str,
+    secret: str
+) -> dict | None:
+    
+    payload = jwt.decode(token, secret)
+
+    if not payload:
+        return None
+    
+    expire_time = payload.get("exp")
+    if expire_time:
+        if expire_time < datetime.now():
+            return None
+    return payload
+
+
+
 def generate_access_token_and_refresh_token(payload: dict, response: Response):
     access_token = _generate_token(
         data=payload,
