@@ -1,0 +1,45 @@
+name: online-ticket-booking-system
+
+services:
+  api:
+    build: .
+    entrypoint : ["sh","/online-ticket-booking-system/entrypoint.sh"]
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    container_name: fastapi_app_container
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.docker
+    restart: always
+    depends_on:
+      - db
+      - redis
+    develop:
+      watch:
+        - action: sync
+          path: ./app
+          target: /app/app
+        - action: rebuild
+          path: ./pyproject.toml
+        - action: rebuild
+          path: ./uv.lock
+
+  db:
+    image: postgres:16-alpine
+    container_name: postgres_container
+    env_file:
+      - .env.docker
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:alpine
+    container_name: redis_container
+    volumes:
+      - redis_data:/data
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
