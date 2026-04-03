@@ -1,5 +1,5 @@
 from sqlalchemy import String, Boolean, Numeric, CheckConstraint, Enum
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 from sqlalchemy.dialects.postgresql import INTERVAL, ARRAY
 from app.db.base import Base
 from typing import TYPE_CHECKING
@@ -9,20 +9,6 @@ import enum
 
 if TYPE_CHECKING:
     from app.models import ShowModel
-
-
-class MovieGenre(enum.Enum):
-    ACTION = "action"
-    SCIFI = "sci-fi"
-    COMEDY = "comedy"
-    THRILLER = "thriller"
-    ROMANCE = "romance"
-    DRAMA = "drama"
-    ANIMATION = "animation"
-    CRIME = "crime"
-    HORROR = "horror"
-    FANTASY = "fantasy"
-    OTHER = "other"
 
 
 class MovieModel(Base):
@@ -36,9 +22,8 @@ class MovieModel(Base):
         CheckConstraint('rating >= 0 AND rating <= 10'),
         nullable=False
     )
-    genre : Mapped[list[MovieGenre]] = mapped_column(
-        ARRAY(Enum(MovieGenre, name="movie_genre_enum"))
-    )
+    genre : Mapped[str] = mapped_column(String)
     is_deleted : Mapped[bool] = mapped_column(Boolean, default=False)
+    imdb_id : Mapped[str] = mapped_column(String, nullable=False, unique=True)
 
     show_list : Mapped[list["ShowModel"]] = relationship(back_populates="movie")

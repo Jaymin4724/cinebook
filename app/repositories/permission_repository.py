@@ -13,12 +13,13 @@ class PermissionRepo:
         permission_check_query = select(
             UserModel.id
         ).join(
-            UserModel.role_id == RolePermissionMap.role_id
+            RolePermissionMap, UserModel.role_id == RolePermissionMap.role_id
         ).join(
-            RolePermissionMap.permission_id == PermissionModel.id
+            PermissionModel, RolePermissionMap.permission_id == PermissionModel.id
         ).where(
-            UserModel.id == UUID(user_id),
-            PermissionModel.permission == permission 
+            UserModel.id == user_id,
+            UserModel.is_active == True,
+            PermissionModel.permission == permission
         )
         
         permission_check_result = await self.db.scalars(permission_check_query)

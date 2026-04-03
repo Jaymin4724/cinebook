@@ -59,6 +59,8 @@ class AuthService:
             user_found = await self.user_repo.get_user_by_email_repo(email=user_email)
 
             if user_found:
+                if user_found.is_active == False:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User account is deleted")
                 generate_access_token_and_refresh_token(
                     payload={"user_id": str(user_found.id)}, response=response
                 )
@@ -123,6 +125,8 @@ class AuthService:
                     first_name=first_name,
                     last_name=last_name,
                 )
+            if user.is_active == False:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User account is deleted")
             elif not user.google_id:
                 user.google_id = google_id
                 if user.user_detail:
