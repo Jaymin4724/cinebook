@@ -46,3 +46,23 @@ class UserRepository:
         await self.db.flush()
 
         return new_user
+
+    
+    async def get_user_id_by_email_and_role_repo(
+        self,
+        email: str,
+        role: str
+    ) -> UserModel:
+        
+        query = select(
+            UserModel.id
+        ).join(
+            RoleModel, UserModel.role_id == RoleModel.id
+        ).where(
+            UserModel.email == email,
+            UserModel.is_active == True,
+            RoleModel.role == role
+        )
+
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()

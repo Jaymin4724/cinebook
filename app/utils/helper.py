@@ -66,7 +66,7 @@ def decode_token(
     
     expire_time = payload.get("exp")
     if expire_time:
-        if expire_time < datetime.now():
+        if datetime.fromtimestamp(expire_time,timezone.utc) < datetime.now(timezone.utc):
             return None
     return payload
 
