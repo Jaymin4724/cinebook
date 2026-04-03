@@ -10,6 +10,7 @@ from sqlalchemy import select
 
 from app.services.auth_service import AuthService
 from app.services.admin_service import AdminService
+from app.services.theatre_admin_service import TheatreAdminService
 
 from app.repositories.user_repository import UserRepository
 from app.repositories.permission_repository import PermissionRepo
@@ -41,7 +42,10 @@ MovieRepoDep = Annotated[MovieRepository, Depends(get_movie_repo)]
 
 
 def get_auth_service(redis: RedisDep, user_repo: UserRepoDep) -> AuthService:
-    return AuthService(redis=redis, user_repo=user_repo)
+    return AuthService(
+        redis=redis, 
+        user_repo=user_repo
+    )
 
 
 def get_admin_service(db: DBDep, redis: RedisDep, user_repo: UserRepoDep, theatre_repo: TheatreRepoDep, movie_repo: MovieRepoDep) -> AdminService:
@@ -54,8 +58,15 @@ def get_admin_service(db: DBDep, redis: RedisDep, user_repo: UserRepoDep, theatr
     )
 
 
+def get_theatre_admin_service(db: DBDep) -> TheatreAdminService:
+    return TheatreAdminService(
+        db=db
+    )
+
+
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 AdminServiceDep = Annotated[AdminService, Depends(get_admin_service)]
+TheatreAdminServiceDep = Annotated[TheatreAdminService, Depends(get_theatre_admin_service)]
 
 
 def get_current_user(authorization: Annotated[str, Header(...)]) -> str:
