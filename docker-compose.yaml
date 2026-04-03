@@ -4,10 +4,11 @@ services:
   api:
     build: .
     entrypoint : ["sh","/online-ticket-booking-system/entrypoint.sh"]
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     container_name: fastapi_app_container
     ports:
       - "8000:8000"
+      - "5678:5678"
     env_file:
       - .env.docker
     restart: always
@@ -18,7 +19,7 @@ services:
       watch:
         - action: sync
           path: ./app
-          target: /app/app
+          target: /online-ticket-booking-system/app
         - action: rebuild
           path: ./pyproject.toml
         - action: rebuild
@@ -26,6 +27,8 @@ services:
 
   db:
     image: postgres:16-alpine
+    ports:
+      - "5431:5432"
     container_name: postgres_container
     env_file:
       - .env.docker
