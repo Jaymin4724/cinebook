@@ -5,4 +5,4 @@ class CreateLayoutSchema(BaseModel):
     
     name: str
     layout: dict
-    theatre_id: int
+    theatre_id: str
