@@ -28,6 +28,8 @@ class Settings(BaseSettings):
 
     OMDB_API_KEY: str
 
+    ES_URL: str
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
