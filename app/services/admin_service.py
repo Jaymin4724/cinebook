@@ -35,8 +35,8 @@ class AdminService:
         user_email = user_body.get("email")
         otp = user_body.get("otp")
         role = user_body.get("role")
-        if user_email and otp:
-            await validate_otp(email=user_email, otp=otp, redis=self.redis)
+
+        await validate_otp(email=user_email, otp=otp, redis=self.redis)
 
         async with self.db.begin():
             self.user_repo.db = self.db

@@ -21,7 +21,7 @@ class TheatreRepository:
         return new_theatre
 
     async def link_operator_to_theatre_repo(
-        self, theatre_id: int, user_id: int
+        self, theatre_id: int, user_id: str
     ) -> TheatreOperatorMapModel:
 
         new_operator = TheatreOperatorMapModel(theatre_id=theatre_id, user_id=user_id)
@@ -31,6 +31,19 @@ class TheatreRepository:
         await self.db.flush()
 
         return new_operator
+
+    async def get_theatre_by_id_and_user(
+        self, theatre_id: int, user_id: str
+    ) -> TheatreOperatorMapModel:
+
+        query = select(TheatreOperatorMapModel).where(
+            TheatreOperatorMapModel.user_id == user_id,
+            TheatreOperatorMapModel.theatre_id == theatre_id,
+        )
+
+        result = await self.db.execute(query)
+
+        return result.scalar_one_or_none()
 
     async def get_all_theatres_repo(self, page: int, size: int):
         skip = (page - 1) * size
