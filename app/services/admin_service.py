@@ -13,7 +13,8 @@ from datetime import timedelta
 
 class AdminService:
     
-    def __init__(self, 
+    def __init__(
+        self, 
         db: AsyncSession,
         redis: Redis,
         user_repo: UserRepository = None,
@@ -32,12 +33,12 @@ class AdminService:
         user_email = user_body.get("email")
         otp = user_body.get("otp")
         role = user_body.get("role")
-        if user_email and otp:
-            validate_otp(
-                email=user_email,
-                otp=otp,
-                redis=self.redis
-            )
+        
+        await validate_otp(
+            email=user_email,
+            otp=otp,
+            redis=self.redis
+        )
 
         async with self.db.begin():
             self.user_repo.db = self.db

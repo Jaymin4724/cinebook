@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import TheatreModel, TheatreOperatorMapModel
+from app.models import TheatreModel, TheatreOperatorMapModel, UserModel
+from sqlalchemy import select
 
 
 class TheatreRepository:
@@ -30,7 +31,7 @@ class TheatreRepository:
     async def link_operator_to_theatre_repo(
         self,
         theatre_id: int,
-        user_id: int
+        user_id: str
     ) -> TheatreOperatorMapModel:
         
         new_operator = TheatreOperatorMapModel(
@@ -43,3 +44,21 @@ class TheatreRepository:
         await self.db.flush()
 
         return new_operator
+    
+
+    async def get_theatre_by_id_and_user(
+        self,
+        theatre_id: int,
+        user_id: str
+    ) -> TheatreOperatorMapModel:
+        
+        query = select(
+            TheatreOperatorMapModel
+        ).where(
+            TheatreOperatorMapModel.user_id == user_id,
+            TheatreOperatorMapModel.theatre_id == theatre_id
+        )
+        
+        result = await self.db.execute(query)
+
+        return result.scalar_one_or_none()

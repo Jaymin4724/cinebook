@@ -10,11 +10,14 @@ from sqlalchemy import select
 
 from app.services.auth_service import AuthService
 from app.services.admin_service import AdminService
+from app.services.theatre_admin_service import TheatreAdminService
 
 from app.repositories.user_repository import UserRepository
 from app.repositories.permission_repository import PermissionRepo
 from app.repositories.theatre_repository import TheatreRepository
 from app.repositories.movie_repository import MovieRepository
+from app.repositories.layout_repository import LayoutRepository
+from app.repositories.screen_repository import ScreenRepository
 
 
 DBDep = Annotated[AsyncSession, Depends(get_db)]
@@ -33,15 +36,26 @@ def get_theatre_repo(db: DBDep) -> TheatreRepository:
 def get_movie_repo(db: DBDep) -> MovieRepository:
     return MovieRepository(db=db)
 
+def get_layout_repo(db: DBDep) -> LayoutRepository:
+    return LayoutRepository(db=db)
+
+def get_screen_repo(db: DBDep) -> ScreenRepository:
+    return ScreenRepository(db=db)
+
 
 UserRepoDep = Annotated[UserRepository, Depends(get_user_repo)]
 PermissionRepoDep = Annotated[PermissionRepo, Depends(get_permission_repo)]
 TheatreRepoDep = Annotated[TheatreRepository, Depends(get_theatre_repo)]
 MovieRepoDep = Annotated[MovieRepository, Depends(get_movie_repo)]
+LayoutRepoDep = Annotated[LayoutRepository, Depends(get_layout_repo)]
+ScreenRepoDep = Annotated[ScreenRepository, Depends(get_screen_repo)]
 
 
 def get_auth_service(redis: RedisDep, user_repo: UserRepoDep) -> AuthService:
-    return AuthService(redis=redis, user_repo=user_repo)
+    return AuthService(
+        redis=redis, 
+        user_repo=user_repo
+    )
 
 
 def get_admin_service(db: DBDep, redis: RedisDep, user_repo: UserRepoDep, theatre_repo: TheatreRepoDep, movie_repo: MovieRepoDep) -> AdminService:
@@ -54,8 +68,18 @@ def get_admin_service(db: DBDep, redis: RedisDep, user_repo: UserRepoDep, theatr
     )
 
 
+def get_theatre_admin_service(db: DBDep, layout_repo: LayoutRepoDep, screen_repo: ScreenRepoDep, theatre_repo: TheatreRepoDep) -> TheatreAdminService:
+    return TheatreAdminService(
+        db=db,
+        layout_repo=layout_repo,
+        screen_repo=screen_repo,
+        theatre_repo=theatre_repo
+    )
+
+
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 AdminServiceDep = Annotated[AdminService, Depends(get_admin_service)]
+TheatreAdminServiceDep = Annotated[TheatreAdminService, Depends(get_theatre_admin_service)]
 
 
 def get_current_user(authorization: Annotated[str, Header(...)]) -> str:
