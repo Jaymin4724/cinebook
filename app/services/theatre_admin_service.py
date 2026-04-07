@@ -4,6 +4,7 @@ from app.repositories.screen_repository import ScreenRepository
 from app.repositories.theatre_repository import TheatreRepository
 from app.schemas.standard_schema import ResponseSchema, create_response
 from fastapi import HTTPException, status
+from app.utils.polish_seat_layout import polish_seat_layout
 
 
 class TheatreAdminService:
@@ -42,10 +43,15 @@ class TheatreAdminService:
 
             if not theatre_found:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Theatre not found")
+            
+            new_layout = polish_seat_layout(layout=layout_format)
+
+            if new_layout is None:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Layout format is not valid")
 
             await self.layout_repo.create_layout_repository(
                 name=layout_name,
-                layout=layout_format,
+                layout=new_layout,
                 theatre_id=theatre_id
             )
 

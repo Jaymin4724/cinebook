@@ -36,9 +36,12 @@ class TheatreRepository:
         self, theatre_id: int, user_id: str
     ) -> TheatreOperatorMapModel:
 
-        query = select(TheatreOperatorMapModel).where(
+        query = select(TheatreOperatorMapModel).join(
+            TheatreModel, TheatreModel.id == TheatreOperatorMapModel.theatre_id
+        ).where(
             TheatreOperatorMapModel.user_id == user_id,
             TheatreOperatorMapModel.theatre_id == theatre_id,
+            TheatreModel.is_active == True
         )
 
         result = await self.db.execute(query)
