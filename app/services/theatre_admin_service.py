@@ -16,6 +16,7 @@ class TheatreAdminService:
         screen_repo: ScreenRepository,
         theatre_repo: TheatreRepository
     ):
+
         self.db = db
         self.layout_repo = layout_repo
         self.screen_repo = screen_repo
@@ -80,6 +81,14 @@ class TheatreAdminService:
 
             if not theatre_found:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Theatre not found")
+            
+            layout_found = await self.layout_repo.get_layout_by_id_and_theatre(
+                layout_id=layout_id,
+                theatre_id=theatre_id
+            )
+
+            if not layout_found:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Layout not found")
         
             await self.screen_repo.create_screen_repository(
                 name=screen_name,

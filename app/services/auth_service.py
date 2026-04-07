@@ -28,12 +28,21 @@ GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 
 class AuthService:
 
-    def __init__(self, redis: Redis, user_repo: UserRepository):
+    def __init__(
+        self,
+        redis: Redis,
+        user_repo: UserRepository
+    ):
+        
         self.redis = redis
         self.user_repo = user_repo
         self.email_service = EmailService()
 
-    async def auth_send_otp_service(self, email: str) -> ResponseSchema:
+    async def auth_send_otp_service(
+        self,
+        email: str
+    ) -> ResponseSchema:
+        
         otp = generate_otp()
 
         await self.redis.hset(name=email, mapping={"otp": otp, "tries": 3})
@@ -49,6 +58,7 @@ class AuthService:
         db: AsyncSession,
         response: Response,
     ) -> ResponseSchema:
+        
         user_email = user_signin_body.get("email")
         user_otp = user_signin_body.get("otp")
         self.user_repo.db = db
@@ -85,8 +95,12 @@ class AuthService:
         return RedirectResponse(url=url)
 
     async def auth_google_callback_service(
-        self, code: str, db: AsyncSession, response: Response
+        self,
+        code: str,
+        db: AsyncSession,
+        response: Response
     ):
+        
         token_data = {
             "code": code,
             "client_id": GOOGLE_CLIENT_ID,

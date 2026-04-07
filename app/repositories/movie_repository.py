@@ -6,7 +6,10 @@ from sqlalchemy import select
 
 class MovieRepository:
 
-    def __init__(self, db: AsyncSession):
+    def __init__(
+        self,
+        db: AsyncSession
+    ):
         self.db = db
 
     async def create_new_movie_repo(
@@ -34,7 +37,10 @@ class MovieRepository:
 
         return new_movie
 
-    async def get_movie_by_imdb_id(self, imdb_id: str) -> MovieModel:
+    async def get_movie_by_imdb_id(
+        self,
+        imdb_id: str
+    ) -> MovieModel:
 
         query = select(MovieModel).where(MovieModel.imdb_id == imdb_id)
 
@@ -42,7 +48,12 @@ class MovieRepository:
 
         return result.scalar_one_or_none()
 
-    async def get_all_movies(self, page: int, size: int):
+    async def get_all_movies(
+        self,
+        page: int,
+        size: int
+    ):
+        
         skip = (page - 1) * size
         result = await self.db.scalars(
             select(MovieModel)

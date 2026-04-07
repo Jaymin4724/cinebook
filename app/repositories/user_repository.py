@@ -5,10 +5,18 @@ from sqlalchemy.orm import selectinload
 
 
 class UserRepository:
-    def __init__(self, db: AsyncSession):
+    def __init__(
+        self,
+        db: AsyncSession
+    ):
+
         self.db = db
 
-    async def get_user_by_email_repo(self, email: str) -> UserModel:
+    async def get_user_by_email_repo(
+        self,
+        email: str
+    ) -> UserModel:
+        
         query = (
             select(UserModel)
             .where(UserModel.email == email)
@@ -48,7 +56,9 @@ class UserRepository:
         return new_user
 
     async def get_user_id_by_email_and_role_repo(
-        self, email: str, role: str
+        self,
+        email: str,
+        role: str
     ) -> UserModel:
 
         query = (
@@ -64,7 +74,12 @@ class UserRepository:
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_all_users_repo(self, page: int, size: int):
+    async def get_all_users_repo(
+        self,
+        page: int,
+        size: int
+    ):
+        
         skip = (page - 1) * size
         result = await self.db.scalars(
             select(UserModel)

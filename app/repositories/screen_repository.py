@@ -14,8 +14,8 @@ class ScreenRepository:
     async def create_screen_repository(
         self,
         name: str, 
-        layout_id: int,
-        theatre_id: int
+        layout_id: str,
+        theatre_id: str
     ):
         
         new_screen = ScreenModel(
