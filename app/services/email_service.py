@@ -19,7 +19,12 @@ class EmailService:
         )
         self.fastmail = FastMail(self.conf)
 
-    async def send_otp_email(self, email_to: str, otp: str):
+    async def send_otp_email(
+        self,
+        email_to: str,
+        otp: str
+    ):
+        
         """Sends a 6-digit OTP email asynchronously using your previous template."""
         body = f"""
         <html>

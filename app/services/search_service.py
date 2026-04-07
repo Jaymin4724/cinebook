@@ -1,7 +1,11 @@
 from app.core.es_config import es
 
 
-async def search_movies_and_theatres(query_text: str, limit: int = 10):
+async def search_movies_and_theatres(
+    query_text: str, 
+    limit: int = 10
+    ):
+    
     """
     Searches for movies and theatres by name using fuzzy matching.
     """

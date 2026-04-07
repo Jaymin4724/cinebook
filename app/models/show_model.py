@@ -3,7 +3,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 from uuid import UUID
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Any, Optional
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 if TYPE_CHECKING:
@@ -16,6 +17,7 @@ class ShowModel(Base):
     start_time : Mapped[datetime] = mapped_column(DateTime, nullable=False)
     screen_id : Mapped[UUID] = mapped_column(ForeignKey("screens.id"),index=True)
     movie_id : Mapped[UUID] = mapped_column(ForeignKey("movies.id"), index=True)
+    category_pricing: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=False)
     is_deleted : Mapped[bool] = mapped_column(Boolean, default=False)
 
     screen : Mapped["ScreenModel"] = relationship(back_populates="show_list")
