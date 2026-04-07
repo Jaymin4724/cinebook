@@ -29,20 +29,15 @@ GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 class AuthService:
 
     def __init__(
-        self,
-        redis: Redis,
-        user_repo: UserRepository
+        self, redis: Redis, user_repo: UserRepository, email_service: EmailService
     ):
-        
+
         self.redis = redis
         self.user_repo = user_repo
-        self.email_service = EmailService()
+        self.email_service = email_service
 
-    async def auth_send_otp_service(
-        self,
-        email: str
-    ) -> ResponseSchema:
-        
+    async def auth_send_otp_service(self, email: str) -> ResponseSchema:
+
         otp = generate_otp()
 
         await self.redis.hset(name=email, mapping={"otp": otp, "tries": 3})
@@ -58,7 +53,7 @@ class AuthService:
         db: AsyncSession,
         response: Response,
     ) -> ResponseSchema:
-        
+
         user_email = user_signin_body.get("email")
         user_otp = user_signin_body.get("otp")
         self.user_repo.db = db
@@ -70,7 +65,10 @@ class AuthService:
 
             if user_found:
                 if user_found.is_active == False:
-                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User account is deleted")
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="User account is deleted",
+                    )
                 generate_access_token_and_refresh_token(
                     payload={"user_id": str(user_found.id)}, response=response
                 )
@@ -95,12 +93,9 @@ class AuthService:
         return RedirectResponse(url=url)
 
     async def auth_google_callback_service(
-        self,
-        code: str,
-        db: AsyncSession,
-        response: Response
+        self, code: str, db: AsyncSession, response: Response
     ):
-        
+
         token_data = {
             "code": code,
             "client_id": GOOGLE_CLIENT_ID,
@@ -140,7 +135,10 @@ class AuthService:
                     last_name=last_name,
                 )
             if user.is_active == False:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User account is deleted")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="User account is deleted",
+                )
             elif not user.google_id:
                 user.google_id = google_id
                 if user.user_detail:

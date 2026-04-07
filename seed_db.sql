@@ -5,6 +5,8 @@ TRUNCATE TABLE permissions CASCADE
 TRUNCATE TABLE roles_permissions_map CASCADE
 TRUNCATE TABLE theatres CASCADE
 TRUNCATE TABLE movies CASCADE
+TRUNCATE TABLE screens CASCADE
+TRUNCATE TABLE layouts CASCADE
 
 -- insert roles 
 INSERT INTO roles (role)
@@ -15,7 +17,7 @@ select * from roles
 -- insert permissions 
 INSERT INTO permissions (permission)
 VALUES ('create-user'), ('create-theatre'), ('create-movie'), 
-('read-users'), ('read-theatres'), ('read-movies')
+('read-users'), ('read-theatres'), ('read-movies'), ('create-layout'), ('create-screen')
 
 select * from permissions 
 
@@ -45,6 +47,14 @@ VALUES
 (
 	(SELECT id FROM roles WHERE role = 'admin' LIMIT 1),
  	(SELECT id FROM permissions WHERE permission = 'create-movie' LIMIT 1)
+),
+( 	
+	(SELECT id FROM roles WHERE role = 'theatre_admin' LIMIT 1),
+ 	(SELECT id FROM permissions WHERE permission = 'create-layout' LIMIT 1)
+),
+( 	
+	(SELECT id FROM roles WHERE role = 'theatre_admin' LIMIT 1),
+ 	(SELECT id FROM permissions WHERE permission = 'create-screen' LIMIT 1)
 )
 select * from roles_permissions_map
 
@@ -72,3 +82,5 @@ select * from user_details
 
 select * from theatres
 select * from movies
+select * from layouts
+select * from screens
