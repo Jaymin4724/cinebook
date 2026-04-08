@@ -13,8 +13,12 @@ services:
       - .env.docker
     restart: always
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_started
+      redis:
+        condition: service_started
+      elasticsearch:
+        condition: service_healthy
     develop:
       watch:
         - action: sync
@@ -43,6 +47,21 @@ services:
       - redis_data:/data
     restart: always
 
+  elasticsearch:
+    image: elasticsearch:9.2.7
+    container_name: elasticsearch_container
+    env_file:
+      - .env.docker
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+    restart: always
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9200"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   redis_data:
+  elastic_data:

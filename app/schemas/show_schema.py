@@ -7,4 +7,4 @@ class CreateShowSchema(BaseModel):
     start_time: datetime
     screen_id: str
     movie_id: str
-    price: dict
+    category_price: dict
