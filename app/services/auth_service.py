@@ -69,16 +69,16 @@ class AuthService:
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="User account is deleted",
                     )
-                generate_access_token_and_refresh_token(
+                tokens = generate_access_token_and_refresh_token(
                     payload={"user_id": str(user_found.id)}, response=response
                 )
-                return create_response(message="User login successfully")
+                return create_response(data=tokens, message="User login successfully")
             else:
                 new_user = await self.user_repo.create_new_user_repo(email=user_email)
-                generate_access_token_and_refresh_token(
+                tokens = generate_access_token_and_refresh_token(
                     payload={"user_id": str(new_user.id)}, response=response
                 )
-                return create_response(message="User created successfully")
+                return create_response(data=tokens, message="User created successfully")
 
     def auth_login_google_service(self):
         params = {
