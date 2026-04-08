@@ -1,10 +1,15 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from redis.asyncio import Redis
 from app.repositories.layout_repository import LayoutRepository
 from app.repositories.screen_repository import ScreenRepository
 from app.repositories.theatre_repository import TheatreRepository
+from app.repositories.movie_repository import MovieRepository
+from app.repositories.show_repository import ShowRepository
 from app.schemas.standard_schema import ResponseSchema, create_response
 from fastapi import HTTPException, status
 from app.utils.polish_seat_layout import polish_seat_layout
+from app.utils.show_create_validation import validate_start_time_of_show, validate_category_price, validate_movie_and_return_time, validate_show_overlap
+from datetime import timezone, timedelta
 
 
 class TheatreAdminService:
@@ -12,15 +17,21 @@ class TheatreAdminService:
     def __init__(
         self,
         db: AsyncSession,
+        redis: Redis,
         layout_repo: LayoutRepository,
         screen_repo: ScreenRepository,
-        theatre_repo: TheatreRepository
+        theatre_repo: TheatreRepository,
+        movie_repo: MovieRepository,
+        show_repo: ShowRepository
     ):
 
         self.db = db
+        self.redis = redis
         self.layout_repo = layout_repo
         self.screen_repo = screen_repo
         self.theatre_repo = theatre_repo
+        self.movie_repo = movie_repo
+        self.show_repo = show_repo
 
 
     async def create_layout_service(
@@ -97,3 +108,65 @@ class TheatreAdminService:
             )
 
         return create_response(message="Screen created successfully")
+    
+
+    async def create_show_service(
+        self,
+        show_body: dict,
+        user_id: str
+    ) -> ResponseSchema:
+        
+        start_time = show_body.get("start_time").replace(tzinfo=timezone.utc)
+        screen_id = show_body.get("screen_id")
+        movie_id = show_body.get("movie_id")
+        category_price = show_body.get("category_price")
+
+        async with self.db.begin():
+            self.screen_repo.db = self.db
+            self.movie_repo.db = self.db
+            self.show_repo.db = self.db
+            self.layout_repo.db = self.db
+
+            screen_found = self.screen_repo.validate_screen_and_user(
+                screen_id=screen_id,
+                user_id=user_id
+            )
+
+            if not screen_found:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Screen not found"
+                )
+
+            movie_time_seconds = await validate_movie_and_return_time(
+                movie_id=movie_id,
+                movie_repo=self.movie_repo
+            )
+
+            movie_time = timedelta(seconds=movie_time_seconds)
+
+            await validate_start_time_of_show(
+                show_datetime=start_time,
+            )
+
+            await validate_show_overlap(
+                start_time=start_time,
+                movie_duration=movie_time,
+                screen_id=screen_id,
+                show_repo=self.show_repo
+            )
+
+            await validate_category_price(
+                category_price=category_price,
+                screen_id=screen_id,
+                screen_repo=self.screen_repo
+            )
+
+            new_show = await self.show_repo.create_show_repo(
+                start_time=start_time,
+                screen_id=screen_id,
+                movie_id=movie_id,
+                category_pricing=category_price
+            )
+
+        return create_response(message="Show created successfully")

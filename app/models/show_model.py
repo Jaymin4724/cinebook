@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 
 if TYPE_CHECKING:
-    from app.models import ScreenModel,MovieModel,BookingModel
+    from app.models import ScreenModel,MovieModel,BookingModel,BookedSeatMapModel
 
 
 class ShowModel(Base):
@@ -23,3 +23,4 @@ class ShowModel(Base):
     screen : Mapped["ScreenModel"] = relationship(back_populates="show_list")
     movie : Mapped["MovieModel"] = relationship(back_populates="show_list")
     booking_list : Mapped[list["BookingModel"]] = relationship(back_populates="show")
+    booked_seat_list : Mapped["BookedSeatMapModel"] = relationship(back_populates="show")

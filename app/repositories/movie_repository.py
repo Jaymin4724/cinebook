@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import MovieModel
 from datetime import timedelta
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 
 class MovieRepository:
@@ -62,3 +62,20 @@ class MovieRepository:
             .limit(size)
         )
         return result.all()
+    
+
+    async def get_movie_by_id(
+        self,
+        movie_id: str
+    ):
+        
+        query = select(
+            MovieModel
+        ).where(
+            MovieModel.id == movie_id,
+            MovieModel.is_deleted == False
+        )
+
+        result = await self.db.execute(query)
+
+        return result.scalar_one_or_none()

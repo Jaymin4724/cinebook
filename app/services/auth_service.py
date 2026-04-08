@@ -56,7 +56,7 @@ class AuthService:
 
         user_email = user_signin_body.get("email")
         user_otp = user_signin_body.get("otp")
-        self.user_repo.db = db
+        self.user_repo.db = db 
 
         await validate_otp(email=user_email, otp=user_otp, redis=self.redis)
 

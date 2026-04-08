@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from app.models import UserModel,ShowModel
+    from app.models import UserModel,ShowModel,BookedSeatMapModel
 
 
 class BookingModel(Base):
@@ -14,10 +14,10 @@ class BookingModel(Base):
 
     total_bill : Mapped[float] = mapped_column(Float, nullable=False)
     number_of_seats : Mapped[int] = mapped_column(Integer, nullable=False)
-    seats_array : Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False)
     user_id : Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
     show_id : Mapped[UUID] = mapped_column(ForeignKey("shows.id"), index=True)
     is_cancelled : Mapped[bool] = mapped_column(Boolean, default=False)
 
     user : Mapped["UserModel"] = relationship(back_populates="booking_list")
     show : Mapped["ShowModel"] = relationship(back_populates="booking_list")
+    booked_seat_list: Mapped["BookedSeatMapModel"] = relationship(back_populates="booking")

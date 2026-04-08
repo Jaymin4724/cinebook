@@ -1,7 +1,10 @@
 from elasticsearch import AsyncElasticsearch
 from app.core.config import settings
 
-es = AsyncElasticsearch(settings.ES_URL)
+es = AsyncElasticsearch(
+    settings.ES_URL,
+    verify_certs=False
+)
 
 
 async def create_index():

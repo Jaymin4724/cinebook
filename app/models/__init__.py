@@ -10,3 +10,4 @@ from app.models.layout_model import LayoutModel
 from app.models.movie_model import MovieModel
 from app.models.show_model import ShowModel
 from app.models.booking_model import BookingModel
+from app.models.booked_seat_map_model import BookedSeatMapModel

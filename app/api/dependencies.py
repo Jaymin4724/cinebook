@@ -19,6 +19,7 @@ from app.repositories.theatre_repository import TheatreRepository
 from app.repositories.movie_repository import MovieRepository
 from app.repositories.layout_repository import LayoutRepository
 from app.repositories.screen_repository import ScreenRepository
+from app.repositories.show_repository import ShowRepository
 
 
 DBDep = Annotated[AsyncSession, Depends(get_db)]
@@ -49,6 +50,9 @@ def get_layout_repo(db: DBDep) -> LayoutRepository:
 def get_screen_repo(db: DBDep) -> ScreenRepository:
     return ScreenRepository(db=db)
 
+def get_show_repo(db: DBDep) -> ShowRepository:
+    return ShowRepository(db=db)
+
 
 UserRepoDep = Annotated[UserRepository, Depends(get_user_repo)]
 PermissionRepoDep = Annotated[PermissionRepo, Depends(get_permission_repo)]
@@ -56,6 +60,7 @@ TheatreRepoDep = Annotated[TheatreRepository, Depends(get_theatre_repo)]
 MovieRepoDep = Annotated[MovieRepository, Depends(get_movie_repo)]
 LayoutRepoDep = Annotated[LayoutRepository, Depends(get_layout_repo)]
 ScreenRepoDep = Annotated[ScreenRepository, Depends(get_screen_repo)]
+ShowRepoDep = Annotated[ShowRepository, Depends(get_show_repo)]
 
 
 def get_auth_service(
@@ -80,17 +85,15 @@ def get_admin_service(
     )
 
 
-def get_theatre_admin_service(
-    db: DBDep,
-    layout_repo: LayoutRepoDep,
-    screen_repo: ScreenRepoDep,
-    theatre_repo: TheatreRepoDep,
-) -> TheatreAdminService:
+def get_theatre_admin_service(db: DBDep, redis: RedisDep, layout_repo: LayoutRepoDep, screen_repo: ScreenRepoDep, theatre_repo: TheatreRepoDep, movie_repo: MovieRepoDep, show_repo: ShowRepoDep) -> TheatreAdminService:
     return TheatreAdminService(
         db=db,
+        redis=redis,
         layout_repo=layout_repo,
         screen_repo=screen_repo,
         theatre_repo=theatre_repo,
+        movie_repo=movie_repo,
+        show_repo=show_repo
     )
 
 
