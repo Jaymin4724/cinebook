@@ -17,8 +17,7 @@ select * from roles
 -- insert permissions 
 INSERT INTO permissions (permission)
 VALUES ('create-user'), ('create-theatre'), ('create-movie'), 
-('read-users'), ('read-theatres'), ('read-movies'), ('create-layout'), ('create-screen')
-
+('read-users'), ('read-theatres'), ('read-movies'), ('create-layout'), ('create-screen'),('create-show')
 select * from permissions 
 
 -- insert roles_permissions_map
@@ -55,7 +54,12 @@ VALUES
 ( 	
 	(SELECT id FROM roles WHERE role = 'theatre_admin' LIMIT 1),
  	(SELECT id FROM permissions WHERE permission = 'create-screen' LIMIT 1)
+),
+( 	
+	(SELECT id FROM roles WHERE role = 'theatre_admin' LIMIT 1),
+ 	(SELECT id FROM permissions WHERE permission = 'create-show' LIMIT 1)
 )
+
 select * from roles_permissions_map
 
 -- insert user(admin)
@@ -84,3 +88,4 @@ select * from theatres
 select * from movies
 select * from layouts
 select * from screens
+select * from shows
