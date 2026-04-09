@@ -4,6 +4,7 @@ from app.repositories.movie_repository import MovieRepository
 from app.repositories.theatre_repository import TheatreRepository
 
 from app.repositories.show_repository import ShowRepository
+from app.services.seat_layout_service import SeatLayoutService
 from app.schemas.movie_schema import MovieOutSchema
 from app.schemas.theatre_schema import TheatreOutSchema
 from app.schemas.standard_schema import ResponseSchema, create_response
@@ -84,11 +85,14 @@ class UserService:
             message="Available shows for this movie and theatre fetched successfully",
         )
 
-    async def get_show_details_service(self, show_id: str) -> ResponseSchema:
+    async def get_show_details_service(
+        self, show_id: str, seat_layout_service: SeatLayoutService
+    ) -> ResponseSchema:
         async with self.db.begin():
             self.show_repo.db = self.db
             show = await self.show_repo.get_show_by_id_repo(
-                show_id=show_id, redis=self.redis
+                show_id=show_id,
+                seat_layout_service=seat_layout_service,
             )
 
             if not show:

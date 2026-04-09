@@ -12,6 +12,7 @@ from app.services.admin_service import AdminService
 from app.services.theatre_admin_service import TheatreAdminService
 from app.services.email_service import EmailService
 from app.services.user_service import UserService
+from app.services.seat_layout_service import SeatLayoutService
 
 # Repository Imports
 from app.repositories.user_repository import UserRepository
@@ -112,6 +113,10 @@ def get_theatre_admin_service(
     )
 
 
+def get_seat_layout_service(db: DBDep, redis: RedisDep) -> SeatLayoutService:
+    return SeatLayoutService(db=db, redis=redis)
+
+
 # --- FINAL SERVICE DEPENDENCIES ---
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 AdminServiceDep = Annotated[AdminService, Depends(get_admin_service)]
@@ -119,6 +124,7 @@ UserServiceDep = Annotated[UserService, Depends(get_user_service)]
 TheatreAdminServiceDep = Annotated[
     TheatreAdminService, Depends(get_theatre_admin_service)
 ]
+SeatLayoutServiceDep = Annotated[SeatLayoutService, Depends(get_seat_layout_service)]
 
 # --- AUTHENTICATION HELPERS ---
 
