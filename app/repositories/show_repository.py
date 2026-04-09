@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
-from app.models import ShowModel, ScreenModel, MovieModel
+from app.models import ShowModel, ScreenModel
 from sqlalchemy import select, desc
 from datetime import datetime
 from sqlalchemy.orm import selectinload, joinedload
@@ -67,6 +67,31 @@ class ShowRepository:
         await self.db.flush()
 
         return new_show
+
+    async def get_shows_repo(
+        self, theatre_id: str, movie_id: str, page: int = 1, size: int = 10
+    ):
+        offset = (page - 1) * size
+
+        query = (
+            select(ShowModel)
+            .join(ScreenModel, ShowModel.screen_id == ScreenModel.id)
+            .where(
+                ShowModel.movie_id == movie_id,
+                ScreenModel.theatre_id == theatre_id,
+                ShowModel.is_deleted == False,
+            )
+            .options(
+                joinedload(ShowModel.movie),
+                joinedload(ShowModel.screen).joinedload(ScreenModel.theatre),
+            )
+            .order_by(ShowModel.start_time)
+            .offset(offset)
+            .limit(size)
+        )
+
+        result = await self.db.execute(query)
+        return result.scalars().all()
 
     async def get_show_by_id_repo(self, show_id: str) -> ShowModel:
         # Chain: Show -> Movie AND Show -> Screen -> Theatre

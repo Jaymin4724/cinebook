@@ -61,6 +61,26 @@ class UserService:
             message="Theatres screening this movie fetched successfully",
         )
 
+    async def get_shows_service(
+        self, theatre_id: str, movie_id: str, page: int = 1, size: int = 10
+    ) -> ResponseSchema:
+        """Fetch all specific show timings for a movie at a particular theatre."""
+        async with self.db.begin():
+            self.show_repo.db = self.db
+            shows = await self.show_repo.get_shows_repo(
+                theatre_id=theatre_id, movie_id=movie_id, page=page, size=size
+            )
+
+        shows_data = [
+            ShowDetailOutSchema.model_validate(show).model_dump(mode="json")
+            for show in shows
+        ]
+
+        return create_response(
+            data=shows_data,
+            message="Available shows for this movie and theatre fetched successfully",
+        )
+
     async def get_show_details_service(self, show_id: str) -> ResponseSchema:
         async with self.db.begin():
             self.show_repo.db = self.db

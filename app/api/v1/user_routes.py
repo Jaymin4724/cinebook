@@ -38,6 +38,29 @@ async def get_theatres_by_movie(
 
 
 @user_router.get(
+    "/theatre/{theatre_id}/movie/{movie_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+)
+@user_router.get(
+    "/movie/{movie_id}/theatre/{theatre_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+)
+async def get_shows(
+    theatre_id: str,
+    movie_id: str,
+    user_service: UserServiceDep,
+    pagination: Annotated[PaginationSchema, Query()],
+):
+    return await user_service.get_shows_service(
+        theatre_id=theatre_id,
+        movie_id=movie_id,
+        page=pagination.page,
+        size=pagination.size,
+    )
+
+@user_router.get(
     "/show/{show_id}",
     status_code=status.HTTP_200_OK,
     response_model=ResponseSchema,
