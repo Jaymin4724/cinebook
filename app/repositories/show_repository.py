@@ -4,6 +4,7 @@ from app.models import ShowModel, ScreenModel
 from sqlalchemy import select, desc
 from datetime import datetime
 from sqlalchemy.orm import selectinload, joinedload
+from app.services.seat_layout_service import SeatLayoutService
 
 
 class ShowRepository:
@@ -93,15 +94,7 @@ class ShowRepository:
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def get_show_by_id_repo(self, show_id: str) -> ShowModel:
-        # Chain: Show -> Movie AND Show -> Screen -> Theatre
-        query = (
-            select(ShowModel)
-            .options(
-                joinedload(ShowModel.movie),
-                joinedload(ShowModel.screen).joinedload(ScreenModel.theatre),
-            )
-            .where(ShowModel.id == show_id)
-        )
-        result = await self.db.execute(query)
-        return result.scalar_one_or_none()
+    async def get_show_by_id_repo(
+        self, show_id: str, seat_layout_service: SeatLayoutService
+    ) -> ShowModel:
+        return await seat_layout_service.generate_show_layout(show_id)

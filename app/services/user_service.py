@@ -1,8 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.redis_config import Redis
 from app.repositories.movie_repository import MovieRepository
 from app.repositories.theatre_repository import TheatreRepository
 
 from app.repositories.show_repository import ShowRepository
+from app.services.seat_layout_service import SeatLayoutService
 from app.schemas.movie_schema import MovieOutSchema
 from app.schemas.theatre_schema import TheatreOutSchema
 from app.schemas.standard_schema import ResponseSchema, create_response
@@ -14,11 +16,13 @@ class UserService:
     def __init__(
         self,
         db: AsyncSession,
+        redis: Redis,
         movie_repo: MovieRepository,
         theatre_repo: TheatreRepository,
         show_repo: ShowRepository,
     ):
         self.db = db
+        self.redis = redis
         self.movie_repo = movie_repo
         self.theatre_repo = theatre_repo
         self.show_repo = show_repo
@@ -81,19 +85,20 @@ class UserService:
             message="Available shows for this movie and theatre fetched successfully",
         )
 
-    async def get_show_details_service(self, show_id: str) -> ResponseSchema:
+    async def get_show_details_service(
+        self, show_id: str, seat_layout_service: SeatLayoutService
+    ) -> ResponseSchema:
         async with self.db.begin():
             self.show_repo.db = self.db
-            show = await self.show_repo.get_show_by_id_repo(show_id=show_id)
+            show = await self.show_repo.get_show_by_id_repo(
+                show_id=show_id,
+                seat_layout_service=seat_layout_service,
+            )
 
-            if not show or show.is_deleted:
+            if not show:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Show not found or unavailable",
                 )
 
-        show_data = ShowDetailOutSchema.model_validate(show).model_dump(mode="json")
-
-        return create_response(
-            data=show_data, message="Show details fetched successfully"
-        )
+        return create_response(data=show, message="Show details fetched successfully")

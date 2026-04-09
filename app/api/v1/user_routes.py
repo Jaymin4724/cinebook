@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, Query
 from typing import Annotated
-from app.api.dependencies import UserServiceDep
+from app.api.dependencies import UserServiceDep, SeatLayoutServiceDep
 from app.schemas.standard_schema import ResponseSchema
 from app.schemas.pagination_schema import PaginationSchema
 
@@ -60,10 +60,15 @@ async def get_shows(
         size=pagination.size,
     )
 
+
 @user_router.get(
     "/show/{show_id}",
     status_code=status.HTTP_200_OK,
     response_model=ResponseSchema,
 )
-async def get_show_by_id(show_id: str, user_service: UserServiceDep):
-    return await user_service.get_show_details_service(show_id=show_id)
+async def get_show_by_id(
+    show_id: str,
+    user_service: UserServiceDep,
+    seat_layout_service: SeatLayoutServiceDep,
+):
+    return await user_service.get_show_details_service(show_id=show_id, seat_layout_service=seat_layout_service)
