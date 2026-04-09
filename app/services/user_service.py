@@ -91,7 +91,7 @@ class UserService:
                 show_id=show_id, redis=self.redis
             )
 
-            if not show or show.is_deleted:
+            if not show:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Show not found or unavailable",

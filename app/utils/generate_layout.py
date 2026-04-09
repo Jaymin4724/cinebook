@@ -24,9 +24,9 @@ class RedisSeatLayoutManagement:
         self
     ):
 
-        if not self.redis.get(name=f"show_seat_layout_{self.show_id}") or not self.redis.get(name=f"show_seat_locked_{self.show_id}"):
-            self.redis.delete(name=f"show_seat_layout_{self.show_id}")
-            self.redis.delete(name=f"show_seat_locked_{self.show_id}")
+        if not await self.redis.json().get(name=f"show_seat_layout_{self.show_id}"):
+            await self.redis.delete(f"show_seat_layout_{self.show_id}")
+            await self.redis.delete(f"show_seat_locked_{self.show_id}")
             return await self.generate_show_layout_from_base()
         return await self.generate_from_existing_layout()
 
@@ -35,8 +35,11 @@ class RedisSeatLayoutManagement:
         self
     ):
         
-        layout_body = self.redis.get(name=f"show_seat_layout_{self.show_id}")
-        locked_seats = self.redis.get(name=f"show_seat_locked_{self.show_id}")
+        layout_body = await self.redis.json().get(name=f"show_seat_layout_{self.show_id}")
+        locked_seats = await self.redis.json().get(name=f"show_seat_locked_{self.show_id}")
+
+        if not locked_seats:
+            return layout_body
 
         for seat in locked_seats:
             seat_grid = layout_body["seat_mapping"][seat]
@@ -73,14 +76,12 @@ class RedisSeatLayoutManagement:
             booked_seats_list=booked_seats_list
         )
         
-        with self.redis.pipeline() as pipe:
+        async with self.redis.pipeline() as pipe:
 
             pipe.json().set(name=f"show_seat_layout_{self.show_id}",path="$",obj=updated_layout)
-            pipe.expire(name=f"show_seat_layout_{self.show_id}",time=600)
-            pipe.redis.hset(name=f"show_seat_locked_{self.show_id}",mapping={})
-            pipe.expire(name=f"show_seat_locked_{self.show_id}",time=600)
+            pipe.expire(name=f"show_seat_layout_{self.show_id}",time=6000)
 
-            pipe.execute()
+            await pipe.execute()
 
         return updated_layout
 
@@ -139,7 +140,7 @@ class RedisSeatLayoutManagement:
             )
         
         rows = metadata.get("row")
-        columns = metadata.get("columm")
+        columns = metadata.get("column")
         
         if not rows or not columns:
             raise HTTPException(
@@ -218,7 +219,15 @@ class RedisSeatLayoutManagement:
 
         result = await self.db.execute(query)
 
-        return result.scalar_one_or_none()
+        price_obj = result.scalar_one_or_none()
+
+        if not price_obj:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Price category not found"
+            )
+        return price_obj.category_pricing
+        
         
     
     async def get_booked_seats(
