@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.redis_config import Redis
 from app.repositories.movie_repository import MovieRepository
 from app.repositories.theatre_repository import TheatreRepository
 
@@ -14,11 +15,13 @@ class UserService:
     def __init__(
         self,
         db: AsyncSession,
+        redis: Redis,
         movie_repo: MovieRepository,
         theatre_repo: TheatreRepository,
         show_repo: ShowRepository,
     ):
         self.db = db
+        self.redis = redis
         self.movie_repo = movie_repo
         self.theatre_repo = theatre_repo
         self.show_repo = show_repo
@@ -84,7 +87,9 @@ class UserService:
     async def get_show_details_service(self, show_id: str) -> ResponseSchema:
         async with self.db.begin():
             self.show_repo.db = self.db
-            show = await self.show_repo.get_show_by_id_repo(show_id=show_id)
+            show = await self.show_repo.get_show_by_id_repo(
+                show_id=show_id, redis=self.redis
+            )
 
             if not show or show.is_deleted:
                 raise HTTPException(
@@ -92,8 +97,4 @@ class UserService:
                     detail="Show not found or unavailable",
                 )
 
-        show_data = ShowDetailOutSchema.model_validate(show).model_dump(mode="json")
-
-        return create_response(
-            data=show_data, message="Show details fetched successfully"
-        )
+        return create_response(data=show, message="Show details fetched successfully")

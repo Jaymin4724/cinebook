@@ -78,12 +78,17 @@ def get_admin_service(
 
 def get_user_service(
     db: DBDep,
+    redis: RedisDep,
     movie_repo: MovieRepoDep,
     theatre_repo: TheatreRepoDep,
-    show_repo: ShowRepoDep
+    show_repo: ShowRepoDep,
 ) -> UserService:
     return UserService(
-        db=db, movie_repo=movie_repo, theatre_repo=theatre_repo, show_repo=show_repo
+        db=db,
+        redis=redis,
+        movie_repo=movie_repo,
+        theatre_repo=theatre_repo,
+        show_repo=show_repo,
     )
 
 
