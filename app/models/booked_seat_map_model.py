@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 class BookedSeatMapModel(Base):
     __tablename__ = "booked_seats_map"
 
-    seats_number : Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False)
+    seats_number : Mapped[str] = mapped_column(String, nullable=False)
     booking_id : Mapped[UUID] = mapped_column(ForeignKey("bookings.id"), index=True)
     show_id : Mapped[UUID] = mapped_column(ForeignKey("shows.id"), index=True)
     is_cancelled : Mapped[bool] = mapped_column(Boolean, default=False)
