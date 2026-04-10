@@ -112,12 +112,14 @@ class UserService:
         seat_layout_service: SeatLayoutService
     ):
         
-        cached_layout = await self.redis.json().get("show_seat_layout_{show_id}")
+        cached_layout = await self.redis.json().get(f"show_seat_layout_{show_id}")
 
         if not cached_layout:
             async with self.db.begin():
                 seat_layout_service.db = self.db
                 layout_body = await seat_layout_service.generate_show_layout(show_id=show_id)
+        else:
+            layout_body = cached_layout
         
         if not layout_body:
             raise HTTPException(
@@ -128,44 +130,58 @@ class UserService:
         layout = layout_body.get("layout")
         seat_mapping = layout_body.get("seat_mapping")
 
-        locked_seats = await self.redis.hgetall("show_seat_locked_{show_id}")
-        locked_seat_dict = {}
+        locked_seats = await self.redis.hgetall(f"show_seat_locked_{show_id}")
 
-        for seat in seat_array:
-            seat_grid = seat_mapping.get(seat)
+    
+        async with self.redis.pipeline(transaction=True) as pipe:
+            for seat in seat_array:
 
-            if not seat_grid:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Seat not found"
-                )
+                seat_grid = seat_mapping.get(seat)
 
-            if seat_grid:
+                if not seat_grid:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Seat not found"
+                    )
+                
                 row_idx, col_idx = seat_grid
 
-            if layout[row_idx][col_idx].get("status") != "Available" or seat in locked_seats:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"{seat} seat is not available"
+                if layout[row_idx][col_idx].get("status") != "Available" or seat in locked_seats:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"{seat} seat is not available"
+                    )
+
+                pipe.hsetnx(
+                    name=f"show_seat_locked_{show_id}",
+                    key=seat,
+                    value=user_id
                 )
             
-            locked_seat_dict[seat] = user_id
+            result = await pipe.execute()
 
-        await self.redis.hset(
-            name=f"show_seat_locked_{show_id}",
-            mapping=locked_seat_dict,
-        )
+        if 0 in result:
+            self.redis.hdel(
+                f"show_seat_locked_{show_id}",
+                *seat_array
+            )
 
-        await self.redis.expire(
-            name=f"show_seat_locked_{show_id}",
-            time=3600
-        )
+            pipe.hexpire(
+                f"show_seat_locked_{show_id}",
+                600,
+                *seat_array
+            )
 
-        await self.redis.hexpire(
-            f"show_seat_locked_{show_id}",
-            600,
-            *locked_seat_dict.keys()
-        )
+            pipe.expire(
+                name=f"show_seat_locked_{show_id}",
+                time=3600,
+                nx=True
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Seats are not available"
+            )
 
         return create_response(
             message="Seats Locked"
