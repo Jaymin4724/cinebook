@@ -20,7 +20,7 @@ class SeatLayoutService:
 
     async def generate_from_existing_layout(self, show_id: str) -> dict:
         layout_body = await self._get_redis_json(f"show_seat_layout_{show_id}")
-        locked_seats = await self._get_redis_json(f"show_seat_locked_{show_id}")
+        locked_seats = await self.redis.hgetall(f"show_seat_locked_{show_id}")
 
         if not locked_seats:
             return layout_body
@@ -52,7 +52,7 @@ class SeatLayoutService:
 
         return updated_layout
 
-    def update_booked_seats(self, base_layout: dict, booked_seats_list: list) -> dict:
+    async def update_booked_seats(self, base_layout: dict, booked_seats_list: list) -> dict:
         layout = base_layout.copy()
         seat_mapping = layout.get("seat_mapping", {})
         total_booked = 0
@@ -69,7 +69,7 @@ class SeatLayoutService:
         layout["metadata"]["booked_seats"] = total_booked
         return layout
 
-    def generate_base_layout(self, screen_layout_body: dict, price_dict: dict) -> dict:
+    async def generate_base_layout(self, screen_layout_body: dict, price_dict: dict) -> dict:
         layout = screen_layout_body.get("layout")
         seat_mapping = screen_layout_body.get("seat_mapping")
         metadata = screen_layout_body.get("metadata")
