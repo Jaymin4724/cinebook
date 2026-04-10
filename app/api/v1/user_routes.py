@@ -1,6 +1,6 @@
-from fastapi import APIRouter, status, Query
+from fastapi import APIRouter, status, Query, Body
 from typing import Annotated
-from app.api.dependencies import UserServiceDep, SeatLayoutServiceDep
+from app.api.dependencies import UserServiceDep, SeatLayoutServiceDep, GetUserDep
 from app.schemas.standard_schema import ResponseSchema
 from app.schemas.pagination_schema import PaginationSchema
 
@@ -72,3 +72,23 @@ async def get_show_by_id(
     seat_layout_service: SeatLayoutServiceDep,
 ):
     return await user_service.get_show_details_service(show_id=show_id, seat_layout_service=seat_layout_service)
+
+
+@user_router.post(
+    "/show/{show_id}/seat-lock",
+    status_code=status.HTTP_201_CREATED,
+    response_model=ResponseSchema
+)
+async def lock_seat_route(
+    show_id: str,
+    user_id: GetUserDep,
+    seat_array: Annotated[list[str],Body(embed=True)],
+    user_service: UserServiceDep,
+    seat_layout_service: SeatLayoutServiceDep
+):
+    return await user_service.lock_seat_service(
+        show_id=show_id,
+        user_id=user_id,
+        seat_array=seat_array,
+        seat_layout_service=seat_layout_service
+    )

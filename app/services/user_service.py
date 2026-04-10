@@ -102,3 +102,71 @@ class UserService:
                 )
 
         return create_response(data=show, message="Show details fetched successfully")
+    
+
+    async def lock_seat_service(
+        self,
+        show_id: str,
+        user_id: str,
+        seat_array: list,
+        seat_layout_service: SeatLayoutService
+    ):
+        
+        cached_layout = await self.redis.json().get("show_seat_layout_{show_id}")
+
+        if not cached_layout:
+            async with self.db.begin():
+                seat_layout_service.db = self.db
+                layout_body = await seat_layout_service.generate_show_layout(show_id=show_id)
+        
+        if not layout_body:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Layout not found"
+            )
+        
+        layout = layout_body.get("layout")
+        seat_mapping = layout_body.get("seat_mapping")
+
+        locked_seats = await self.redis.hgetall("show_seat_locked_{show_id}")
+        locked_seat_dict = {}
+
+        for seat in seat_array:
+            seat_grid = seat_mapping.get(seat)
+
+            if not seat_grid:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Seat not found"
+                )
+
+            if seat_grid:
+                row_idx, col_idx = seat_grid
+
+            if layout[row_idx][col_idx].get("status") != "Available" or seat in locked_seats:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"{seat} seat is not available"
+                )
+            
+            locked_seat_dict[seat] = user_id
+
+        await self.redis.hset(
+            name=f"show_seat_locked_{show_id}",
+            mapping=locked_seat_dict,
+        )
+
+        await self.redis.expire(
+            name=f"show_seat_locked_{show_id}",
+            time=3600
+        )
+
+        await self.redis.hexpire(
+            f"show_seat_locked_{show_id}",
+            600,
+            *locked_seat_dict.keys()
+        )
+
+        return create_response(
+            message="Seats Locked"
+        )
