@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import ScreenModel, LayoutModel, TheatreModel, TheatreOperatorMapModel
 from sqlalchemy import select
+from fastapi import HTTPException, status
 
 
 class ScreenRepository:
@@ -72,3 +73,39 @@ class ScreenRepository:
         result = await self.db.execute(query)
 
         return result.scalar_one_or_none()
+    
+
+    async def delete_screen_repo(
+        self,
+        screen_id: str,
+        user_id: str
+    ):
+        
+        query = select(
+            ScreenModel
+        ).join(
+            TheatreModel, ScreenModel.theatre_id == TheatreModel.id
+        ).join(
+            TheatreOperatorMapModel, TheatreOperatorMapModel.theatre_id == TheatreModel.id
+        ).where(
+            ScreenModel.id == screen_id,
+            ScreenModel.is_active == True,
+            TheatreModel.is_active == True,
+            TheatreOperatorMapModel.user_id == user_id
+        )
+
+        result = await self.db.execute(
+            query
+        )
+
+        screen_found = result.scalar_one_or_none()
+
+        if not screen_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Screen not found"
+            )
+        
+        await screen_found.soft_delete(
+            db=self.db
+        )

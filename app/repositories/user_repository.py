@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import UserModel, UserDetailModel, RoleModel
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from fastapi import HTTPException, status
 
 
 class UserRepository:
@@ -88,3 +89,30 @@ class UserRepository:
             .limit(size)
         )
         return result.all()
+    
+
+    async def delete_user_repo(
+        self,
+        user_id: str
+    ):
+        
+        query = select(
+            UserModel
+        ).where(
+            UserModel.id == user_id,
+            UserModel.is_active == True
+        )
+
+        result = await self.db.execute(
+            query
+        )
+
+        user_found = result.scalar_one_or_none()
+
+        if not user_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        await user_found.soft_delete(db=self.db)

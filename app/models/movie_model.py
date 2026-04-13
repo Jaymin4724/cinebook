@@ -5,6 +5,7 @@ from app.db.base import Base
 from typing import TYPE_CHECKING
 from datetime import timedelta
 import enum
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 if TYPE_CHECKING:
@@ -27,3 +28,8 @@ class MovieModel(Base):
     imdb_id : Mapped[str] = mapped_column(String, nullable=False, unique=True)
 
     show_list : Mapped[list["ShowModel"]] = relationship(back_populates="movie")
+
+
+    async def soft_delete(self, db: AsyncSession):
+        self.is_deleted = True
+        db.add(self)

@@ -5,6 +5,8 @@ from uuid import UUID
 from datetime import datetime
 from typing import TYPE_CHECKING, Dict, Any, Optional
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 
 if TYPE_CHECKING:
@@ -24,3 +26,8 @@ class ShowModel(Base):
     movie : Mapped["MovieModel"] = relationship(back_populates="show_list")
     booking_list : Mapped[list["BookingModel"]] = relationship(back_populates="show")
     booked_seat_list : Mapped["BookedSeatMapModel"] = relationship(back_populates="show")
+
+
+    async def soft_delete(self, db: AsyncSession):
+        self.is_deleted = True
+        db.add(self)

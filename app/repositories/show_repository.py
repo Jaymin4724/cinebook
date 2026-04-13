@@ -1,10 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
-from app.models import ShowModel, ScreenModel
+from app.models import ShowModel, ScreenModel, TheatreModel, TheatreOperatorMapModel
 from sqlalchemy import select, desc
 from datetime import datetime
 from sqlalchemy.orm import selectinload, joinedload
 from app.services.seat_layout_service import SeatLayoutService
+from fastapi import HTTPException, status
 
 
 class ShowRepository:
@@ -38,11 +39,11 @@ class ShowRepository:
     ):
 
         query = select(ShowModel).where(
-            ShowModel.start_time > start_time.replace(tzinfo=None),
-            ShowModel.start_time < end_time.replace(tzinfo=None),
+            ShowModel.start_time >= start_time.replace(tzinfo=None),
+            ShowModel.start_time <= end_time.replace(tzinfo=None),
             ShowModel.screen_id == screen_id,
             ShowModel.is_deleted == False,
-        )
+        ).limit(1)
 
         result = await self.db.execute(query)
 
@@ -98,3 +99,40 @@ class ShowRepository:
         self, show_id: str, seat_layout_service: SeatLayoutService
     ) -> ShowModel:
         return await seat_layout_service.generate_show_layout(show_id)
+    
+
+    async def delete_show_repo(
+        self,
+        show_id: str,
+        user_id: str
+    ):
+        
+        query = select(
+            ShowModel
+        ).join(
+            ScreenModel, ShowModel.screen_id == ScreenModel.id
+        ).join(
+            TheatreModel, ScreenModel.theatre_id == TheatreModel.id
+        ).join(
+            TheatreOperatorMapModel, TheatreModel.id == TheatreOperatorMapModel.theatre_id
+        ).where(
+            ShowModel.id == show_id,
+            ShowModel.is_deleted == False,
+            TheatreOperatorMapModel.user_id == user_id
+        )
+
+        result = await self.db.execute(
+            query
+        )
+
+        show_found = result.scalar_one_or_none()
+
+        if not show_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Show not found"
+            )
+        
+        show_found.soft_delete(
+            db=self.db
+        )

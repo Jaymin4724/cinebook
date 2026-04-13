@@ -61,3 +61,37 @@ async def create_show_route(
         show_body=show_body.model_dump(),
         user_id=user_id
     )
+
+
+@theatre_admin_router.delete(
+    "/screen/delete",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("delete-screen"))]
+)
+async def delete_screen_router(
+    screen_id: str,
+    user_id: GetUserDep,
+    theatre_admin_service: TheatreAdminServiceDep
+):
+    await theatre_admin_service.delete_screen_service(
+        screen_id=screen_id,
+        user_id=user_id
+    )
+
+
+@theatre_admin_router.delete(
+    "/show/delete",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("delete-show"))]
+)
+async def delete_show_router(
+    show_id: str,
+    user_id: GetUserDep,
+    theatre_admin_service: TheatreAdminServiceDep
+):
+    await theatre_admin_service.delete_show_service(
+        show_id=show_id,
+        user_id=user_id
+    )
