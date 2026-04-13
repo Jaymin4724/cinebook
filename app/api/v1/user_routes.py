@@ -71,24 +71,42 @@ async def get_show_by_id(
     user_service: UserServiceDep,
     seat_layout_service: SeatLayoutServiceDep,
 ):
-    return await user_service.get_show_details_service(show_id=show_id, seat_layout_service=seat_layout_service)
+    return await user_service.get_show_details_service(
+        show_id=show_id, seat_layout_service=seat_layout_service
+    )
 
 
 @user_router.post(
     "/show/{show_id}/seat-lock",
     status_code=status.HTTP_201_CREATED,
-    response_model=ResponseSchema
+    response_model=ResponseSchema,
 )
 async def lock_seat_route(
     show_id: str,
     user_id: GetUserDep,
-    seat_array: Annotated[list[str],Body(embed=True)],
+    seat_array: Annotated[list[str], Body(embed=True)],
     user_service: UserServiceDep,
-    seat_layout_service: SeatLayoutServiceDep
+    seat_layout_service: SeatLayoutServiceDep,
 ):
     return await user_service.lock_seat_service(
         show_id=show_id,
         user_id=user_id,
         seat_array=seat_array,
-        seat_layout_service=seat_layout_service
+        seat_layout_service=seat_layout_service,
+    )
+
+
+@user_router.post(
+    "/show/{show_id}/seat-book",
+    status_code=status.HTTP_201_CREATED,
+    response_model=ResponseSchema,
+)
+async def book_tickets(
+    show_id: str,
+    user_id: GetUserDep,
+    seat_array: Annotated[list[str], Body(embed=True)],
+    user_service: UserServiceDep,
+):
+    return await user_service.book_ticket_service(
+        show_id=show_id, user_id=user_id, seat_array=seat_array
     )

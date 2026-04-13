@@ -22,6 +22,7 @@ from app.repositories.movie_repository import MovieRepository
 from app.repositories.layout_repository import LayoutRepository
 from app.repositories.screen_repository import ScreenRepository
 from app.repositories.show_repository import ShowRepository
+from app.repositories.booking_repository import BookingRepository
 
 # --- BASE INFRASTRUCTURE ---
 DBDep = Annotated[AsyncSession, Depends(get_db)]
@@ -44,6 +45,7 @@ MovieRepoDep = Annotated[MovieRepository, Depends(get_repo(MovieRepository))]
 LayoutRepoDep = Annotated[LayoutRepository, Depends(get_repo(LayoutRepository))]
 ScreenRepoDep = Annotated[ScreenRepository, Depends(get_repo(ScreenRepository))]
 ShowRepoDep = Annotated[ShowRepository, Depends(get_repo(ShowRepository))]
+BookingRepoDep = Annotated[BookingRepository, Depends(get_repo(BookingRepository))]
 
 # --- SERVICE FACTORIES ---
 
@@ -83,6 +85,7 @@ def get_user_service(
     movie_repo: MovieRepoDep,
     theatre_repo: TheatreRepoDep,
     show_repo: ShowRepoDep,
+    booking_repo: BookingRepoDep,
 ) -> UserService:
     return UserService(
         db=db,
@@ -90,6 +93,7 @@ def get_user_service(
         movie_repo=movie_repo,
         theatre_repo=theatre_repo,
         show_repo=show_repo,
+        booking_repo=booking_repo,
     )
 
 
