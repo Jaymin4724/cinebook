@@ -3,6 +3,7 @@ from app.models import TheatreModel, TheatreOperatorMapModel, ShowModel, ScreenM
 from sqlalchemy import select
 from datetime import datetime
 from datetime import datetime, timezone
+from fastapi import HTTPException, status
 
 
 class TheatreRepository:
@@ -85,3 +86,32 @@ class TheatreRepository:
 
         result = await self.db.execute(query)
         return result.scalars().all()
+    
+
+    async def delete_theatre_repo(
+        self,
+        theatre_id: str
+    ):
+        
+        query = select(
+            TheatreModel
+        ).where(
+            TheatreModel.is_active == True,
+            TheatreModel.id == theatre_id
+        )
+
+        result = await self.db.execute(
+            query
+        )
+
+        theatre_found = result.scalar_one_or_none()
+
+        if not theatre_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Theatre not found"
+            )
+        
+        await theatre_found.soft_delete(
+            db=self.db
+        )

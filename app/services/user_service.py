@@ -3,6 +3,7 @@ from app.core.redis_config import Redis
 from app.repositories.movie_repository import MovieRepository
 from app.repositories.theatre_repository import TheatreRepository
 from app.repositories.booking_repository import BookingRepository
+from app.repositories.user_repository import UserRepository
 
 from app.repositories.show_repository import ShowRepository
 from app.services.seat_layout_service import SeatLayoutService
@@ -24,6 +25,7 @@ class UserService:
         theatre_repo: TheatreRepository,
         show_repo: ShowRepository,
         booking_repo: BookingRepository,
+        user_repo: UserRepository
     ):
         self.db = db
         self.redis = redis
@@ -31,6 +33,7 @@ class UserService:
         self.theatre_repo = theatre_repo
         self.show_repo = show_repo
         self.booking_repo = booking_repo
+        self.user_repo = user_repo
 
     async def get_movies_by_theatre_service(
         self, theatre_id: str, page: int = 1, size: int = 10
@@ -223,4 +226,21 @@ class UserService:
                 "seats": seat_array,
                 "booking_id": str(booking.id),
             },
+        )
+    
+    
+    async def delete_user_service(
+        self,
+        user_id: str
+    ):
+        
+        async with self.db.begin():
+            self.user_repo.db = self.db
+
+            await self.user_repo.delete_user_repo(
+                user_id=user_id
+            )
+
+        return create_response(
+            message="User deleted successfully"
         )

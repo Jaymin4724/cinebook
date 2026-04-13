@@ -110,3 +110,17 @@ async def book_tickets(
     return await user_service.book_ticket_service(
         show_id=show_id, user_id=user_id, seat_array=seat_array
     )
+
+
+@user_router.delete(
+    "/user/delete",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema
+)
+async def delete_user_router(
+    user_id: GetUserDep,
+    user_service: UserServiceDep
+):
+    return await user_service.delete_user_service(
+        user_id=user_id
+    )

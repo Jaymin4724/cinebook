@@ -127,7 +127,7 @@ class TheatreAdminService:
             self.show_repo.db = self.db
             self.layout_repo.db = self.db
 
-            screen_found = self.screen_repo.validate_screen_and_user(
+            screen_found = await self.screen_repo.validate_screen_and_user(
                 screen_id=screen_id,
                 user_id=user_id
             )
@@ -170,3 +170,41 @@ class TheatreAdminService:
             )
 
         return create_response(message="Show created successfully")
+    
+
+    async def delete_screen_service(
+        self,
+        screen_id: str,
+        user_id: str
+    ):
+        
+        async with self.db.begin():
+            self.screen_repo.db = self.db
+
+            await self.screen_repo.delete_screen_repo(
+                screen_id=screen_id,
+                user_id=user_id
+            )
+
+        return create_response(
+            message="Screen deleted successfully"
+        )
+    
+
+    async def delete_show_service(
+        self,
+        show_id: str,
+        user_id: str
+    ):
+        
+        async with self.db.begin():
+            self.show_repo.db = self.db
+        
+            await self.show_repo.delete_show_repo(
+                show_id=show_id,
+                user_id=user_id
+            )
+
+        return create_response(
+            message="Show deleted successfully"
+        )

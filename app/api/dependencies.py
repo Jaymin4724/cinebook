@@ -86,6 +86,7 @@ def get_user_service(
     theatre_repo: TheatreRepoDep,
     show_repo: ShowRepoDep,
     booking_repo: BookingRepoDep,
+    user_repo: UserRepoDep
 ) -> UserService:
     return UserService(
         db=db,
@@ -94,6 +95,7 @@ def get_user_service(
         theatre_repo=theatre_repo,
         show_repo=show_repo,
         booking_repo=booking_repo,
+        user_repo=user_repo
     )
 
 

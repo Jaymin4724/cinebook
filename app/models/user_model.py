@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 from typing import TYPE_CHECKING
 from uuid import UUID
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 if TYPE_CHECKING:
@@ -32,3 +33,8 @@ class UserModel(Base):
         back_populates="user"
     )
     booking_list: Mapped[list["BookingModel"]] = relationship(back_populates="user")
+
+
+    async def soft_delete(self, db: AsyncSession):
+        self.is_active = False
+        db.add(self)

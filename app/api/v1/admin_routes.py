@@ -89,3 +89,33 @@ async def get_all_movies_router(
     return await admin_service.get_all_movies_service(
         page=pagination.page, size=pagination.size
     )
+
+
+@admin_router.delete(
+    "/theatre/delete",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("delete-theatre"))],
+)
+async def delete_theatre_router(
+    theatre_id: str,
+    admin_service: AdminServiceDep
+):
+    return await admin_service.delete_theatre_service(
+        theatre_id=theatre_id
+    )
+    
+
+@admin_router.delete(
+    "/movie/delete",
+    status_code=status.HTTP_404_NOT_FOUND,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("delete-movie"))],
+)
+async def delete_movie_router(
+    movie_id: str,
+    admin_services: AdminServiceDep
+):
+    return await admin_services.delete_movie_service(
+        movie_id=movie_id
+    )

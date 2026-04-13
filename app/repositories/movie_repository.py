@@ -3,6 +3,7 @@ from app.models import MovieModel, ShowModel, ScreenModel
 from datetime import timedelta
 from sqlalchemy import select
 from datetime import datetime, timezone
+from fastapi import HTTPException, status
 
 
 class MovieRepository:
@@ -86,3 +87,32 @@ class MovieRepository:
 
         result = await self.db.execute(query)
         return result.scalars().all()
+    
+
+    async def delete_movie_repo(
+        self,
+        movie_id: str
+    ):
+        
+        query = select(
+            MovieModel
+        ).where(
+            MovieModel.id == movie_id,
+            MovieModel.is_deleted == False
+        )
+
+        result = await self.db.execute(
+            query
+        )
+
+        movie_found = result.scalar_one_or_none()
+
+        if not movie_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Movie not found"
+            )
+        
+        movie_found.soft_delete(
+            db=self.db
+        )

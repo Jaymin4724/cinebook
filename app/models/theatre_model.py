@@ -2,6 +2,7 @@ from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 from typing import TYPE_CHECKING
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 if TYPE_CHECKING:
@@ -19,3 +20,7 @@ class TheatreModel(Base):
     theatre_operator_list : Mapped["TheatreOperatorMapModel"] = relationship(back_populates="theatre")
     screen_list : Mapped[list["ScreenModel"]] = relationship(back_populates="theatre")
     layout_list : Mapped[list["LayoutModel"]] = relationship(back_populates="theatre")
+
+    async def soft_delete(self, db: AsyncSession):
+        self.is_active = False
+        db.add(self)
