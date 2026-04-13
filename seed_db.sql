@@ -7,6 +7,8 @@ TRUNCATE TABLE theatres CASCADE
 TRUNCATE TABLE movies CASCADE
 TRUNCATE TABLE screens CASCADE
 TRUNCATE TABLE layouts CASCADE
+TRUNCATE TABLE bookings CASCADE
+TRUNCATE TABLE booked_seat_map CASCADE
 
 -- insert roles 
 INSERT INTO roles (role)
@@ -89,3 +91,5 @@ select * from movies
 select * from layouts
 select * from screens
 select * from shows
+select * from bookings
+select * from booked_seats_map
