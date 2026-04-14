@@ -6,11 +6,14 @@ from app.models import ShowModel, LayoutModel, ScreenModel, BookedSeatMapModel
 
 
 class SeatLayoutService:
+    """Handle seat layout generation and updates for shows."""
+
     def __init__(self, db: AsyncSession, redis: Redis):
         self.db = db
         self.redis = redis
 
     async def generate_show_layout(self, show_id: str) -> dict:
+        """Generate or fetch seat layout for a show."""
         layout_exists = await self.redis.json().get(name=f"show_seat_layout_{show_id}")
         if not layout_exists:
             await self.redis.delete(f"show_seat_layout_{show_id}")
@@ -19,6 +22,7 @@ class SeatLayoutService:
         return await self.generate_from_existing_layout(show_id)
 
     async def generate_from_existing_layout(self, show_id: str) -> dict:
+        """Update existing layout with locked seats."""
         layout_body = await self._get_redis_json(f"show_seat_layout_{show_id}")
         locked_seats = await self.redis.hgetall(f"show_seat_locked_{show_id}")
 
@@ -36,6 +40,7 @@ class SeatLayoutService:
         return layout_body
 
     async def generate_show_layout_from_base(self, show_id: str) -> dict:
+        """Generate seat layout from base data and store in Redis."""
         screen_layout_body = await self.get_screen_layout(show_id=show_id)
         price_dict = await self.get_price_dict(show_id=show_id)
 
@@ -52,7 +57,10 @@ class SeatLayoutService:
 
         return updated_layout
 
-    async def update_booked_seats(self, base_layout: dict, booked_seats_list: list) -> dict:
+    async def update_booked_seats(
+        self, base_layout: dict, booked_seats_list: list
+    ) -> dict:
+        """Mark booked seats in layout."""
         layout = base_layout.copy()
         seat_mapping = layout.get("seat_mapping", {})
         total_booked = 0
@@ -69,12 +77,14 @@ class SeatLayoutService:
         layout["metadata"]["booked_seats"] = total_booked
         return layout
 
-    async def generate_base_layout(self, screen_layout_body: dict, price_dict: dict) -> dict:
+    async def generate_base_layout(
+        self, screen_layout_body: dict, price_dict: dict
+    ) -> dict:
+        """Build base layout with pricing and availability."""
         layout = screen_layout_body.get("layout")
         seat_mapping = screen_layout_body.get("seat_mapping")
         metadata = screen_layout_body.get("metadata")
 
-        # Validate required fields
         self._validate_presence(layout, "Layout")
         self._validate_presence(seat_mapping, "Seat mapping")
         self._validate_presence(price_dict, "Price")
@@ -106,6 +116,7 @@ class SeatLayoutService:
         }
 
     async def get_screen_layout(self, show_id: str) -> dict:
+        """Fetch screen layout for a show."""
         query = (
             select(LayoutModel)
             .join(ScreenModel, ScreenModel.layout_id == LayoutModel.id)
@@ -126,6 +137,7 @@ class SeatLayoutService:
         return layout_body
 
     async def get_price_dict(self, show_id: str) -> dict:
+        """Fetch pricing details for a show."""
         query = select(ShowModel).where(ShowModel.id == show_id)
         result = await self.db.execute(query)
         show_obj = result.scalar_one_or_none()
@@ -136,6 +148,7 @@ class SeatLayoutService:
         return show_obj.category_pricing
 
     async def get_booked_seats(self, show_id: str) -> list:
+        """Fetch booked seats for a show."""
         query = select(BookedSeatMapModel.seats_number).where(
             BookedSeatMapModel.show_id == show_id
         )
@@ -143,12 +156,14 @@ class SeatLayoutService:
         return result.scalars().all()
 
     async def _get_redis_json(self, key: str) -> dict:
+        """Fetch JSON data from Redis."""
         data = await self.redis.json().get(name=key)
         if data is None:
             return {}
         return data
 
     def _validate_presence(self, value, name: str):
+        """Validate required data presence."""
         if value is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"{name} not found"

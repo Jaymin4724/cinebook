@@ -12,20 +12,21 @@ from typing import Annotated
 
 theatre_admin_router = APIRouter(prefix="/theatre-admin", tags=["theatre admin"])
 
+
 @theatre_admin_router.post(
     "/create-layout",
     status_code=status.HTTP_201_CREATED,
     response_model=ResponseSchema,
-    dependencies=[Depends(permission_required("create-layout"))]
+    dependencies=[Depends(permission_required("create-layout"))],
 )
 async def create_layout_route(
     layout_body: Annotated[CreateLayoutSchema, Body(...)],
     theatre_admin_service: TheatreAdminServiceDep,
-    user_id: GetUserDep
+    user_id: GetUserDep,
 ):
+    """Create a new seat layout for a theatre."""
     return await theatre_admin_service.create_layout_service(
-        layout_body=layout_body.model_dump(),
-        user_id=user_id
+        layout_body=layout_body.model_dump(), user_id=user_id
     )
 
 
@@ -33,16 +34,16 @@ async def create_layout_route(
     "/create-screen",
     status_code=status.HTTP_201_CREATED,
     response_model=ResponseSchema,
-    dependencies=[Depends(permission_required("create-screen"))]
+    dependencies=[Depends(permission_required("create-screen"))],
 )
 async def create_screen_route(
     screen_body: Annotated[CreateScreenSchema, Body(...)],
     theatre_admin_service: TheatreAdminServiceDep,
-    user_id: GetUserDep
+    user_id: GetUserDep,
 ):
+    """Create a new screen in a theatre."""
     return await theatre_admin_service.create_screen_service(
-        screen_body=screen_body.model_dump(),
-        user_id=user_id
+        screen_body=screen_body.model_dump(), user_id=user_id
     )
 
 
@@ -50,16 +51,16 @@ async def create_screen_route(
     "/create-show",
     status_code=status.HTTP_201_CREATED,
     response_model=ResponseSchema,
-    dependencies=[Depends(permission_required("create-show"))]
+    dependencies=[Depends(permission_required("create-show"))],
 )
 async def create_show_route(
     show_body: Annotated[CreateShowSchema, Body(...)],
     theatre_admin_service: TheatreAdminServiceDep,
-    user_id: GetUserDep
+    user_id: GetUserDep,
 ):
+    """Create a new show for a screen."""
     return await theatre_admin_service.create_show_service(
-        show_body=show_body.model_dump(),
-        user_id=user_id
+        show_body=show_body.model_dump(), user_id=user_id
     )
 
 
@@ -67,16 +68,14 @@ async def create_show_route(
     "/screen/delete",
     status_code=status.HTTP_200_OK,
     response_model=ResponseSchema,
-    dependencies=[Depends(permission_required("delete-screen"))]
+    dependencies=[Depends(permission_required("delete-screen"))],
 )
-async def delete_screen_router(
-    screen_id: str,
-    user_id: GetUserDep,
-    theatre_admin_service: TheatreAdminServiceDep
+async def delete_screen_route(
+    screen_id: str, user_id: GetUserDep, theatre_admin_service: TheatreAdminServiceDep
 ):
-    await theatre_admin_service.delete_screen_service(
-        screen_id=screen_id,
-        user_id=user_id
+    """Delete screen by ID."""
+    return await theatre_admin_service.delete_screen_service(
+        screen_id=screen_id, user_id=user_id
     )
 
 
@@ -84,14 +83,12 @@ async def delete_screen_router(
     "/show/delete",
     status_code=status.HTTP_200_OK,
     response_model=ResponseSchema,
-    dependencies=[Depends(permission_required("delete-show"))]
+    dependencies=[Depends(permission_required("delete-show"))],
 )
-async def delete_show_router(
-    show_id: str,
-    user_id: GetUserDep,
-    theatre_admin_service: TheatreAdminServiceDep
+async def delete_show_route(
+    show_id: str, user_id: GetUserDep, theatre_admin_service: TheatreAdminServiceDep
 ):
-    await theatre_admin_service.delete_show_service(
-        show_id=show_id,
-        user_id=user_id
+    """Delete show by ID."""
+    return await theatre_admin_service.delete_show_service(
+        show_id=show_id, user_id=user_id
     )

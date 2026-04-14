@@ -11,5 +11,5 @@ redis_client = Redis(
 
 
 def get_redis():
-    """Provide a Redis client instance for caching and blacklisting refresh tokens."""
+    """Provide a Redis client instance."""
     return redis_client

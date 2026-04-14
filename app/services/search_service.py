@@ -1,14 +1,8 @@
 from app.core.es_config import es
 
 
-async def search_movies_and_theatres(
-    query_text: str, 
-    limit: int = 10
-    ):
-    
-    """
-    Searches for movies and theatres by name using fuzzy matching.
-    """
+async def search_movies_and_theatres(query_text: str, limit: int = 10):
+    """Search movies and theatres using prefix matching."""
     index_name = "booking_search"
 
     search_query = {

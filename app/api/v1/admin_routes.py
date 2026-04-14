@@ -21,6 +21,7 @@ admin_router = APIRouter(prefix="/admin", tags=["admin"])
 async def create_user_route(
     user_body: CreateUserSchema, admin_service: AdminServiceDep
 ):
+    """Create a new user with given details."""
     return await admin_service.create_user_service(user_body=user_body.model_dump())
 
 
@@ -30,9 +31,10 @@ async def create_user_route(
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("create-theatre"))],
 )
-async def create_theatre_router(
+async def create_theatre_route(
     theatre_body: CreateTheatreSchema, admin_service: AdminServiceDep
 ):
+    """Create a new theatre."""
     return await admin_service.create_theatre_service(
         theatre_body=theatre_body.model_dump()
     )
@@ -47,7 +49,9 @@ async def create_theatre_router(
 async def create_movie_router(
     imdb_id: Annotated[str, Body(embed=True)], admin_service: AdminServiceDep
 ):
+    """Create a new movie using IMDB ID."""
     return await admin_service.create_new_movie_service(imdb_id=imdb_id)
+
 
 @admin_router.get(
     "/users",
@@ -58,6 +62,7 @@ async def create_movie_router(
 async def get_all_users_router(
     admin_service: AdminServiceDep, pagination: Annotated[PaginationSchema, Query()]
 ):
+    """Fetch all users with pagination."""
     return await admin_service.get_all_users_service(
         page=pagination.page, size=pagination.size
     )
@@ -72,6 +77,7 @@ async def get_all_users_router(
 async def get_all_theatres_router(
     admin_service: AdminServiceDep, pagination: Annotated[PaginationSchema, Query()]
 ):
+    """Fetch all theatres with pagination."""
     return await admin_service.get_all_theatres_service(
         page=pagination.page, size=pagination.size
     )
@@ -86,6 +92,7 @@ async def get_all_theatres_router(
 async def get_all_movies_router(
     admin_service: AdminServiceDep, pagination: Annotated[PaginationSchema, Query()]
 ):
+    """Fetch all movies with pagination."""
     return await admin_service.get_all_movies_service(
         page=pagination.page, size=pagination.size
     )
@@ -97,14 +104,10 @@ async def get_all_movies_router(
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-theatre"))],
 )
-async def delete_theatre_router(
-    theatre_id: str,
-    admin_service: AdminServiceDep
-):
-    return await admin_service.delete_theatre_service(
-        theatre_id=theatre_id
-    )
-    
+async def delete_theatre_router(theatre_id: str, admin_service: AdminServiceDep):
+    """Delete theatre by ID."""
+    return await admin_service.delete_theatre_service(theatre_id=theatre_id)
+
 
 @admin_router.delete(
     "/movie/delete",
@@ -112,10 +115,6 @@ async def delete_theatre_router(
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-movie"))],
 )
-async def delete_movie_router(
-    movie_id: str,
-    admin_services: AdminServiceDep
-):
-    return await admin_services.delete_movie_service(
-        movie_id=movie_id
-    )
+async def delete_movie_router(movie_id: str, admin_services: AdminServiceDep):
+    """Delete movie by ID."""
+    return await admin_services.delete_movie_service(movie_id=movie_id)

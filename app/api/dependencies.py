@@ -24,14 +24,13 @@ from app.repositories.screen_repository import ScreenRepository
 from app.repositories.show_repository import ShowRepository
 from app.repositories.booking_repository import BookingRepository
 
-# --- BASE INFRASTRUCTURE ---
 DBDep = Annotated[AsyncSession, Depends(get_db)]
 RedisDep = Annotated[Redis, Depends(get_redis)]
 
 
 # --- REPOSITORY FACTORIES ---
-# Creating a helper to reduce boilerplate
 def get_repo(repo_class):
+    """Return repository instance with database dependency."""
     def _get_repo(db: DBDep):
         return repo_class(db=db)
 
@@ -48,9 +47,8 @@ ShowRepoDep = Annotated[ShowRepository, Depends(get_repo(ShowRepository))]
 BookingRepoDep = Annotated[BookingRepository, Depends(get_repo(BookingRepository))]
 
 # --- SERVICE FACTORIES ---
-
-
 def get_email_service() -> EmailService:
+    """Create email service instance."""
     return EmailService()
 
 
@@ -59,6 +57,7 @@ EmailServiceDep = Annotated[EmailService, Depends(get_email_service)]
 
 def get_auth_service(
     redis: RedisDep, user_repo: UserRepoDep, email_service: EmailServiceDep
+    """Create auth service with required dependencies."""
 ) -> AuthService:
     return AuthService(redis=redis, user_repo=user_repo, email_service=email_service)
 
@@ -70,6 +69,7 @@ def get_admin_service(
     theatre_repo: TheatreRepoDep,
     movie_repo: MovieRepoDep,
 ) -> AdminService:
+    """Create admin service with required dependencies."""
     return AdminService(
         db=db,
         redis=redis,
@@ -88,6 +88,7 @@ def get_user_service(
     booking_repo: BookingRepoDep,
     user_repo: UserRepoDep
 ) -> UserService:
+    """Create user service with required dependencies."""
     return UserService(
         db=db,
         redis=redis,
@@ -108,6 +109,7 @@ def get_theatre_admin_service(
     movie_repo: MovieRepoDep,
     show_repo: ShowRepoDep,
 ) -> TheatreAdminService:
+    """Create theatre admin service with required dependencies."""
     return TheatreAdminService(
         db=db,
         redis=redis,
@@ -120,6 +122,7 @@ def get_theatre_admin_service(
 
 
 def get_seat_layout_service(db: DBDep, redis: RedisDep) -> SeatLayoutService:
+    """Create seat layout service instance."""
     return SeatLayoutService(db=db, redis=redis)
 
 
@@ -133,9 +136,8 @@ TheatreAdminServiceDep = Annotated[
 SeatLayoutServiceDep = Annotated[SeatLayoutService, Depends(get_seat_layout_service)]
 
 # --- AUTHENTICATION HELPERS ---
-
-
 def get_user_id(authorization: str = Header(...)) -> str:
+    """Extract user ID from access token."""
     if not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token format"
@@ -156,6 +158,7 @@ GetUserDep = Annotated[str, Depends(get_user_id)]
 
 
 def permission_required(permission: str):
+    """Check if user has required permission."""
     async def permission_dependency(
         user_id: GetUserDep,
         db: DBDep,

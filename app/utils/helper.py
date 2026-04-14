@@ -7,10 +7,12 @@ from app.core.redis_config import Redis
 
 
 def generate_otp() -> str:
+    """Generate a 6-digit numeric OTP."""
     return "".join(secrets.choice("0123456789") for _ in range(6))
 
 
 async def validate_otp(email: str, otp: str, redis: Redis) -> bool:
+    """Validate OTP from Redis and manage retry attempts."""
     cached_data = await redis.hgetall(name=email)
 
     if not cached_data:
@@ -43,6 +45,7 @@ async def validate_otp(email: str, otp: str, redis: Redis) -> bool:
 def _generate_token(
     data: dict, expires_delta: timedelta, secret: str, token_type: str
 ) -> str:
+    """Generate JWT token with expiry and type."""
     to_encode = data.copy()
 
     if "user_id" in to_encode:
@@ -57,7 +60,7 @@ def _generate_token(
 
 
 def decode_token(token: str, secret: str) -> dict | None:
-
+    """Decode JWT token and return payload if valid."""
     payload = jwt.decode(token, secret)
 
     if not payload:
@@ -73,6 +76,7 @@ def decode_token(token: str, secret: str) -> dict | None:
 
 
 def generate_access_token_and_refresh_token(payload: dict, response: Response):
+    """Generate access and refresh tokens and set them in cookies."""
     access_token = _generate_token(
         data=payload,
         expires_delta=timedelta(minutes=int(settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)),

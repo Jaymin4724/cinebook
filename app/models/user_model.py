@@ -34,7 +34,7 @@ class UserModel(Base):
     )
     booking_list: Mapped[list["BookingModel"]] = relationship(back_populates="user")
 
-
     async def soft_delete(self, db: AsyncSession):
+        """Mark user as deleted."""
         self.is_active = False
         db.add(self)
