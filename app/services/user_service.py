@@ -17,6 +17,8 @@ from uuid import UUID
 
 
 class UserService:
+    """Handle user related operations."""
+
     def __init__(
         self,
         db: AsyncSession,
@@ -25,7 +27,7 @@ class UserService:
         theatre_repo: TheatreRepository,
         show_repo: ShowRepository,
         booking_repo: BookingRepository,
-        user_repo: UserRepository
+        user_repo: UserRepository,
     ):
         self.db = db
         self.redis = redis
@@ -38,7 +40,7 @@ class UserService:
     async def get_movies_by_theatre_service(
         self, theatre_id: str, page: int = 1, size: int = 10
     ) -> ResponseSchema:
-        """Fetch all movies currently showing in a specific theatre."""
+        """Fetch movies running in a theatre."""
         async with self.db.begin():
             self.movie_repo.db = self.db
             movies = await self.movie_repo.get_movies_by_theatre_repo(
@@ -57,7 +59,7 @@ class UserService:
     async def get_theatres_by_movie_service(
         self, movie_id: str, page: int = 1, size: int = 10
     ) -> ResponseSchema:
-        """Fetch all theatres that are currently screening a specific movie."""
+        """Fetch theatres showing a movie."""
         async with self.db.begin():
             self.theatre_repo.db = self.db
             theatres = await self.theatre_repo.get_theatres_by_movie_repo(
@@ -76,7 +78,7 @@ class UserService:
     async def get_shows_service(
         self, theatre_id: str, movie_id: str, page: int = 1, size: int = 10
     ) -> ResponseSchema:
-        """Fetch all specific show timings for a movie at a particular theatre."""
+        """Fetch shows for a movie in a theatre."""
         async with self.db.begin():
             self.show_repo.db = self.db
             shows = await self.show_repo.get_shows_repo(
@@ -96,6 +98,7 @@ class UserService:
     async def get_show_details_service(
         self, show_id: str, seat_layout_service: SeatLayoutService
     ) -> ResponseSchema:
+        """Fetch show details with seat layout."""
         async with self.db.begin():
             self.show_repo.db = self.db
             show = await self.show_repo.get_show_by_id_repo(
@@ -112,6 +115,7 @@ class UserService:
         return create_response(data=show, message="Show details fetched successfully")
 
     async def _get_layout(self, show_id: str, seat_layout_service: SeatLayoutService):
+        """Fetch or generate seat layout for a show."""
         layout_body = await self.redis.json().get(f"show_seat_layout_{show_id}")
 
         if not layout_body:
@@ -128,6 +132,7 @@ class UserService:
         return layout_body
 
     def _get_seat_info(self, layout_body: dict, seat_id: str):
+        """Fetch seat position and price from layout."""
         mapping = layout_body.get("seat_mapping", {})
         layout = layout_body.get("layout", [])
 
@@ -148,6 +153,7 @@ class UserService:
         seat_array: list,
         seat_layout_service: SeatLayoutService,
     ):
+        """Lock selected seats for a show."""
         layout_body = await self._get_layout(show_id, seat_layout_service)
         locked_seats = await self.redis.hgetall(f"show_seat_locked_{show_id}")
 
@@ -179,6 +185,7 @@ class UserService:
         return create_response(message="Seats Locked Successfully")
 
     async def book_ticket_service(self, show_id: str, user_id: str, seat_array: list):
+        """Book locked seats and create booking."""
         locked_seats = await self.redis.hgetall(f"show_seat_locked_{show_id}")
         for seat in seat_array:
             if locked_seats.get(seat) != user_id:
@@ -215,20 +222,12 @@ class UserService:
             message="Tickets Booked Successfully",
             data={"booking_id": str(booking.id), "total_paid": total_bill},
         )
-    
-    
-    async def delete_user_service(
-        self,
-        user_id: str
-    ):
-        
+
+    async def delete_user_service(self, user_id: str):
+        """Delete user account."""
         async with self.db.begin():
             self.user_repo.db = self.db
 
-            await self.user_repo.delete_user_repo(
-                user_id=user_id
-            )
+            await self.user_repo.delete_user_repo(user_id=user_id)
 
-        return create_response(
-            message="User deleted successfully"
-        )
+        return create_response(message="User deleted successfully")

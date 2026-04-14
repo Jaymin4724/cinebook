@@ -3,7 +3,10 @@ from fastapi import HTTPException, status
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from app.core.config import settings
 
+
 class EmailService:
+    """Send OTP email to user."""
+
     def __init__(self):
         self.conf = ConnectionConfig(
             MAIL_USERNAME=settings.MAIL_USERNAME,
@@ -19,12 +22,7 @@ class EmailService:
         )
         self.fastmail = FastMail(self.conf)
 
-    async def send_otp_email(
-        self,
-        email_to: str,
-        otp: str
-    ):
-        
+    async def send_otp_email(self, email_to: str, otp: str):
         """Sends a 6-digit OTP email asynchronously using your previous template."""
         body = f"""
         <html>
@@ -47,5 +45,5 @@ class EmailService:
         except Exception:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send verification email."
+                detail="Failed to send verification email.",
             )

@@ -6,18 +6,14 @@ from fastapi import HTTPException, status
 
 
 class UserRepository:
-    def __init__(
-        self,
-        db: AsyncSession
-    ):
+    """Handle database operations related to users."""
+
+    def __init__(self, db: AsyncSession):
 
         self.db = db
 
-    async def get_user_by_email_repo(
-        self,
-        email: str
-    ) -> UserModel:
-        
+    async def get_user_by_email_repo(self, email: str) -> UserModel:
+        """Fetch user by email with user details."""
         query = (
             select(UserModel)
             .where(UserModel.email == email)
@@ -34,7 +30,7 @@ class UserRepository:
         last_name: str = None,
         role: str = "user",
     ) -> UserModel:
-
+        """Create a new user with role and basic details."""
         role_obj = (
             await self.db.execute(select(RoleModel).where(RoleModel.role == role))
         ).scalar_one_or_none()
@@ -57,11 +53,9 @@ class UserRepository:
         return new_user
 
     async def get_user_id_by_email_and_role_repo(
-        self,
-        email: str,
-        role: str
+        self, email: str, role: str
     ) -> UserModel:
-
+        """Fetch user ID by email and role if active."""
         query = (
             select(UserModel.id)
             .join(RoleModel, UserModel.role_id == RoleModel.id)
@@ -75,12 +69,8 @@ class UserRepository:
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_all_users_repo(
-        self,
-        page: int,
-        size: int
-    ):
-        
+    async def get_all_users_repo(self, page: int, size: int):
+        """Fetch paginated list of active users."""
         skip = (page - 1) * size
         result = await self.db.scalars(
             select(UserModel)
@@ -89,30 +79,20 @@ class UserRepository:
             .limit(size)
         )
         return result.all()
-    
 
-    async def delete_user_repo(
-        self,
-        user_id: str
-    ):
-        
-        query = select(
-            UserModel
-        ).where(
-            UserModel.id == user_id,
-            UserModel.is_active == True
+    async def delete_user_repo(self, user_id: str):
+        """Soft delete user by ID if exists."""
+        query = select(UserModel).where(
+            UserModel.id == user_id, UserModel.is_active == True
         )
 
-        result = await self.db.execute(
-            query
-        )
+        result = await self.db.execute(query)
 
         user_found = result.scalar_one_or_none()
 
         if not user_found:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
-        
+
         await user_found.soft_delete(db=self.db)

@@ -1,13 +1,11 @@
 from elasticsearch import AsyncElasticsearch
 from app.core.config import settings
 
-es = AsyncElasticsearch(
-    settings.ES_URL,
-    verify_certs=False
-)
+es = AsyncElasticsearch(settings.ES_URL, verify_certs=False)
 
 
 async def create_index():
+    """Create Elasticsearch index for search if not exists."""
     index_name = "booking_search"
 
     if await es.indices.exists(index=index_name):

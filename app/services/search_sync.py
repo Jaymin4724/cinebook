@@ -5,6 +5,7 @@ from app.core.es_config import es
 
 
 async def async_sync_to_es(instance_data):
+    """Sync movie or theatre data to Elasticsearch index."""
     index_name = "booking_search"
     model_type = instance_data["type"]
     doc_id = f"{model_type}_{instance_data['id']}"
@@ -22,6 +23,7 @@ async def async_sync_to_es(instance_data):
 
 
 def sync_to_es_wrapper(target):
+    """Prepare instance data and trigger async Elasticsearch sync."""
     instance_data = {
         "id": target.id,
         "name": target.name,
@@ -38,6 +40,7 @@ def sync_to_es_wrapper(target):
 
 
 def handle_after_save(mapper, connection, target):
+    """Handle model changes and sync data to Elasticsearch."""
     sync_to_es_wrapper(target)
 
 

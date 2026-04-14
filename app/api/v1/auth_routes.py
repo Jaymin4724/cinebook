@@ -18,6 +18,7 @@ async def auth_send_otp_route(
     email: Annotated[EmailStr, Body(embed=True)],
     auth_service: AuthServiceDep,
 ):
+    """Send an OTP to the given email for login."""
     return await auth_service.auth_send_otp_service(email=email)
 
 
@@ -30,6 +31,7 @@ async def auth_signin_route(
     response: Response,
     auth_service: AuthServiceDep,
 ):
+    """Verify OTP and sign in the user."""
     return await auth_service.auth_signin_service(
         user_signin_body=user_signin_body.model_dump(),
         db=db,
@@ -41,6 +43,7 @@ async def auth_signin_route(
 def auth_login_google(
     auth_service: AuthServiceDep,
 ):
+    """Redirect user to Google login page."""
     return auth_service.auth_login_google_service()
 
 
@@ -53,6 +56,7 @@ async def auth_google_callback(
     response: Response,
     auth_service: AuthServiceDep,
 ):
+    """Handle Google login callback and authenticate user."""
     return await auth_service.auth_google_callback_service(
         code=code, db=db, response=response
     )

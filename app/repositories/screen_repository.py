@@ -5,26 +5,14 @@ from fastapi import HTTPException, status
 
 
 class ScreenRepository:
+    """Handle database operations related to screens."""
 
-    def __init__(
-        self, 
-        db: AsyncSession
-    ):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
-    
-    async def create_screen_repository(
-        self,
-        name: str, 
-        layout_id: str,
-        theatre_id: str
-    ):
-        
-        new_screen = ScreenModel(
-            name=name,
-            layout_id=layout_id,
-            theatre_id=theatre_id
-        )
+    async def create_screen_repo(self, name: str, layout_id: str, theatre_id: str):
+        """Create a new screen for a theatre."""
+        new_screen = ScreenModel(name=name, layout_id=layout_id, theatre_id=theatre_id)
 
         self.db.add(new_screen)
 
@@ -32,80 +20,63 @@ class ScreenRepository:
 
         return new_screen
 
-
-    async def get_layout_by_screen_repo(
-        self,
-        screen_id: str
-    ):
-        
-        query = select(
-            LayoutModel
-        ).join(
-            ScreenModel, ScreenModel.layout_id == LayoutModel.id
-        ).where(
-            ScreenModel.id == screen_id,
-            ScreenModel.is_active == True
+    async def get_layout_by_screen_repo(self, screen_id: str):
+        """Fetch layout for a screen if active."""
+        query = (
+            select(LayoutModel)
+            .join(ScreenModel, ScreenModel.layout_id == LayoutModel.id)
+            .where(ScreenModel.id == screen_id, ScreenModel.is_active == True)
         )
 
         result = await self.db.execute(query)
 
         return result.scalar_one_or_none()
-    
 
-    async def validate_screen_and_user(
-        self,
-        screen_id: str,
-        user_id: str
-    ):
-        query = select(
-            ScreenModel
-        ).join(
-            TheatreModel, ScreenModel.theatre_id == TheatreModel.id
-        ).join(
-            TheatreOperatorMapModel, TheatreOperatorMapModel.theatre_id == TheatreModel.id
-        ).where(
-            ScreenModel.id == screen_id,
-            ScreenModel.is_active == True,
-            TheatreModel.is_active == True,
-            TheatreOperatorMapModel.user_id == user_id
+    async def validate_screen_and_user(self, screen_id: str, user_id: str):
+        """Fetch screen if it belongs to user and is active."""
+        query = (
+            select(ScreenModel)
+            .join(TheatreModel, ScreenModel.theatre_id == TheatreModel.id)
+            .join(
+                TheatreOperatorMapModel,
+                TheatreOperatorMapModel.theatre_id == TheatreModel.id,
+            )
+            .where(
+                ScreenModel.id == screen_id,
+                ScreenModel.is_active == True,
+                TheatreModel.is_active == True,
+                TheatreOperatorMapModel.user_id == user_id,
+            )
         )
 
         result = await self.db.execute(query)
 
         return result.scalar_one_or_none()
-    
 
-    async def delete_screen_repo(
-        self,
-        screen_id: str,
-        user_id: str
-    ):
-        
-        query = select(
-            ScreenModel
-        ).join(
-            TheatreModel, ScreenModel.theatre_id == TheatreModel.id
-        ).join(
-            TheatreOperatorMapModel, TheatreOperatorMapModel.theatre_id == TheatreModel.id
-        ).where(
-            ScreenModel.id == screen_id,
-            ScreenModel.is_active == True,
-            TheatreModel.is_active == True,
-            TheatreOperatorMapModel.user_id == user_id
+    async def delete_screen_repo(self, screen_id: str, user_id: str):
+        """Soft delete screen if it belongs to user."""
+        query = (
+            select(ScreenModel)
+            .join(TheatreModel, ScreenModel.theatre_id == TheatreModel.id)
+            .join(
+                TheatreOperatorMapModel,
+                TheatreOperatorMapModel.theatre_id == TheatreModel.id,
+            )
+            .where(
+                ScreenModel.id == screen_id,
+                ScreenModel.is_active == True,
+                TheatreModel.is_active == True,
+                TheatreOperatorMapModel.user_id == user_id,
+            )
         )
 
-        result = await self.db.execute(
-            query
-        )
+        result = await self.db.execute(query)
 
         screen_found = result.scalar_one_or_none()
 
         if not screen_found:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Screen not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Screen not found"
             )
-        
-        await screen_found.soft_delete(
-            db=self.db
-        )
+
+        await screen_found.soft_delete(db=self.db)

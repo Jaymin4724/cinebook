@@ -8,12 +8,18 @@ from app.repositories.show_repository import ShowRepository
 from app.schemas.standard_schema import ResponseSchema, create_response
 from fastapi import HTTPException, status
 from app.utils.polish_seat_layout import polish_seat_layout
-from app.utils.show_create_validation import validate_start_time_of_show, validate_category_price, validate_movie_and_return_time, validate_show_overlap
+from app.utils.show_create_validation import (
+    validate_start_time_of_show,
+    validate_category_price,
+    validate_movie_and_return_time,
+    validate_show_overlap,
+)
 from datetime import timezone, timedelta
 
 
 class TheatreAdminService:
-    
+    """Handle theatre admin operations."""
+
     def __init__(
         self,
         db: AsyncSession,
@@ -22,7 +28,7 @@ class TheatreAdminService:
         screen_repo: ScreenRepository,
         theatre_repo: TheatreRepository,
         movie_repo: MovieRepository,
-        show_repo: ShowRepository
+        show_repo: ShowRepository,
     ):
 
         self.db = db
@@ -33,13 +39,10 @@ class TheatreAdminService:
         self.movie_repo = movie_repo
         self.show_repo = show_repo
 
-
     async def create_layout_service(
-        self,
-        layout_body: dict,
-        user_id: str
+        self, layout_body: dict, user_id: str
     ) -> ResponseSchema:
-        
+        """Validate and create seat layout for a theatre."""
         layout_name = layout_body.get("name")
         layout_format = layout_body.get("layout")
         theatre_id = layout_body.get("theatre_id")
@@ -49,34 +52,32 @@ class TheatreAdminService:
             self.layout_repo.db = self.db
 
             theatre_found = await self.theatre_repo.get_theatre_by_id_and_user(
-                theatre_id=theatre_id,
-                user_id=user_id
+                theatre_id=theatre_id, user_id=user_id
             )
 
             if not theatre_found:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Theatre not found")
-            
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Theatre not found"
+                )
+
             new_layout = polish_seat_layout(layout=layout_format)
 
             if new_layout is None:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Layout format is not valid")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Layout format is not valid",
+                )
 
             await self.layout_repo.create_layout_repository(
-                name=layout_name,
-                layout=new_layout,
-                theatre_id=theatre_id
+                name=layout_name, layout=new_layout, theatre_id=theatre_id
             )
 
-        return create_response(
-            message="New layout created successfully"
-        )
-    
+        return create_response(message="New layout created successfully")
+
     async def create_screen_service(
-        self,
-        screen_body: dict,
-        user_id: str
+        self, screen_body: dict, user_id: str
     ) -> ResponseSchema:
-        
+        """Validate and create screen for a theatre."""
         screen_name = screen_body.get("name")
         theatre_id = screen_body.get("theatre_id")
         layout_id = screen_body.get("layout_id")
@@ -86,36 +87,33 @@ class TheatreAdminService:
             self.layout_repo.db = self.db
 
             theatre_found = await self.theatre_repo.get_theatre_by_id_and_user(
-                theatre_id=theatre_id,
-                user_id=user_id
+                theatre_id=theatre_id, user_id=user_id
             )
 
             if not theatre_found:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Theatre not found")
-            
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Theatre not found"
+                )
+
             layout_found = await self.layout_repo.get_layout_by_id_and_theatre(
-                layout_id=layout_id,
-                theatre_id=theatre_id
+                layout_id=layout_id, theatre_id=theatre_id
             )
 
             if not layout_found:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Layout not found")
-        
-            await self.screen_repo.create_screen_repository(
-                name=screen_name,
-                theatre_id=theatre_id,
-                layout_id=layout_id
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Layout not found"
+                )
+
+            await self.screen_repo.create_screen_repo(
+                name=screen_name, theatre_id=theatre_id, layout_id=layout_id
             )
 
         return create_response(message="Screen created successfully")
-    
 
     async def create_show_service(
-        self,
-        show_body: dict,
-        user_id: str
+        self, show_body: dict, user_id: str
     ) -> ResponseSchema:
-        
+        """Validate and create show for a screen."""
         start_time = show_body.get("start_time").replace(tzinfo=timezone.utc)
         screen_id = show_body.get("screen_id")
         movie_id = show_body.get("movie_id")
@@ -128,19 +126,16 @@ class TheatreAdminService:
             self.layout_repo.db = self.db
 
             screen_found = await self.screen_repo.validate_screen_and_user(
-                screen_id=screen_id,
-                user_id=user_id
+                screen_id=screen_id, user_id=user_id
             )
 
             if not screen_found:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Screen not found"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Screen not found"
                 )
 
             movie_time_seconds = await validate_movie_and_return_time(
-                movie_id=movie_id,
-                movie_repo=self.movie_repo
+                movie_id=movie_id, movie_repo=self.movie_repo
             )
 
             movie_time = timedelta(seconds=movie_time_seconds)
@@ -153,58 +148,40 @@ class TheatreAdminService:
                 start_time=start_time,
                 movie_duration=movie_time,
                 screen_id=screen_id,
-                show_repo=self.show_repo
+                show_repo=self.show_repo,
             )
 
             await validate_category_price(
                 category_price=category_price,
                 screen_id=screen_id,
-                screen_repo=self.screen_repo
+                screen_repo=self.screen_repo,
             )
 
             new_show = await self.show_repo.create_show_repo(
                 start_time=start_time,
                 screen_id=screen_id,
                 movie_id=movie_id,
-                category_pricing=category_price
+                category_pricing=category_price,
             )
 
         return create_response(message="Show created successfully")
-    
 
-    async def delete_screen_service(
-        self,
-        screen_id: str,
-        user_id: str
-    ):
-        
+    async def delete_screen_service(self, screen_id: str, user_id: str):
+        """Delete screen by ID after validation."""
         async with self.db.begin():
             self.screen_repo.db = self.db
 
             await self.screen_repo.delete_screen_repo(
-                screen_id=screen_id,
-                user_id=user_id
+                screen_id=screen_id, user_id=user_id
             )
 
-        return create_response(
-            message="Screen deleted successfully"
-        )
-    
+        return create_response(message="Screen deleted successfully")
 
-    async def delete_show_service(
-        self,
-        show_id: str,
-        user_id: str
-    ):
-        
+    async def delete_show_service(self, show_id: str, user_id: str):
+        """Delete show by ID after validation."""
         async with self.db.begin():
             self.show_repo.db = self.db
-        
-            await self.show_repo.delete_show_repo(
-                show_id=show_id,
-                user_id=user_id
-            )
 
-        return create_response(
-            message="Show deleted successfully"
-        )
+            await self.show_repo.delete_show_repo(show_id=show_id, user_id=user_id)
+
+        return create_response(message="Show deleted successfully")

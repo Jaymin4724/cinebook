@@ -4,12 +4,14 @@ from uuid import UUID
 
 
 class BookingRepository:
+    """Handle database operations related to bookings."""
     def __init__(self, db: AsyncSession):
         self.db = db
 
     async def create_booking_repo(
         self, user_id: UUID, show_id: UUID, seat_array: list[str], total_bill: float
     ) -> BookingModel:
+        """Create booking and store selected seats."""
         new_booking = BookingModel(
             user_id=user_id,
             show_id=show_id,

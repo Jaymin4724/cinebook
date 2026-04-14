@@ -15,6 +15,7 @@ from datetime import timedelta
 
 
 class AdminService:
+    """Handle admin related operations."""
 
     def __init__(
         self,
@@ -30,11 +31,8 @@ class AdminService:
         self.theatre_repo = theatre_repo
         self.movie_repo = movie_repo
 
-    async def create_user_service(
-        self,
-        user_body: dict
-    ) -> ResponseSchema:
-
+    async def create_user_service(self, user_body: dict) -> ResponseSchema:
+        """Verify OTP and create a new user with given role."""
         user_email = user_body.get("email")
         otp = user_body.get("otp")
         role = user_body.get("role")
@@ -52,11 +50,8 @@ class AdminService:
             data=user_data, message=f"User created successfully with role {role}"
         )
 
-    async def create_theatre_service(
-        self,
-        theatre_body: dict
-    ) -> ResponseSchema:
-
+    async def create_theatre_service(self, theatre_body: dict) -> ResponseSchema:
+        """Create a theatre and assign operator to it."""
         theatre_name = theatre_body.get("name").lower()
         operator_email = theatre_body.get("operator_email").lower()
         theatre_area = theatre_body.get("area").lower()
@@ -91,10 +86,8 @@ class AdminService:
             data=theatre_data, message="Theatre created successfully"
         )
 
-    async def create_new_movie_service(
-        self,
-        imdb_id: int) -> ResponseSchema:
-
+    async def create_new_movie_service(self, imdb_id: int) -> ResponseSchema:
+        """Fetch movie data from OMDB and create new movie."""
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"https://www.omdbapi.com/?i={imdb_id}&apikey={settings.OMDB_API_KEY}"
@@ -131,24 +124,16 @@ class AdminService:
         movie_data = MovieOutSchema.model_validate(movie).model_dump(mode="json")
         return create_response(data=movie_data, message="Movie created successfully")
 
-    async def get_all_users_service(
-        self,
-        page: int = 1,
-        size: int = 10
-    ):
-        
+    async def get_all_users_service(self, page: int = 1, size: int = 10):
+        """Fetch paginated list of users."""
         users = await self.user_repo.get_all_users_repo(page, size)
         users_data = [
             UserOutSchema.model_validate(user).model_dump(mode="json") for user in users
         ]
         return create_response(data=users_data, message="Users fetched successfully")
 
-    async def get_all_theatres_service(
-        self,
-        page: int = 1,
-        size: int = 10
-    ):
-        
+    async def get_all_theatres_service(self, page: int = 1, size: int = 10):
+        """Fetch paginated list of theatres."""
         theatres = await self.theatre_repo.get_all_theatres_repo(page, size)
         theatres_data = [
             TheatreOutSchema.model_validate(theatre).model_dump(mode="json")
@@ -158,12 +143,8 @@ class AdminService:
             data=theatres_data, message="Theatres fetched successfully"
         )
 
-    async def get_all_movies_service(
-        self,
-        page: int = 1,
-        size: int = 10
-    ):
-        
+    async def get_all_movies_service(self, page: int = 1, size: int = 10):
+        """Fetch paginated list of movies."""
         movies = await self.movie_repo.get_all_movies(page, size)
 
         movies_data = [
@@ -171,36 +152,21 @@ class AdminService:
             for movie in movies
         ]
         return create_response(data=movies_data, message="Movies fetched successfully")
-    
-    async def delete_theatre_service(
-        self,
-        theatre_id: str
-    ):
-        
+
+    async def delete_theatre_service(self, theatre_id: str):
+        """Delete theatre by ID."""
         async with self.db.begin():
             self.theatre_repo.db = self.db
 
-            await self.theatre_repo.delete_theatre_repo(
-                theatre_id=theatre_id
-            )
+            await self.theatre_repo.delete_theatre_repo(theatre_id=theatre_id)
 
-        return create_response(
-            message="Theatre deleted successfully"
-        )
-    
-    
-    async def delete_movie_service(
-        self,
-        movie_id: str
-    ):
-        
+        return create_response(message="Theatre deleted successfully")
+
+    async def delete_movie_service(self, movie_id: str):
+        """Delete movie by ID."""
         async with self.db.begin():
             self.movie_repo.db = self.db
 
-            self.movie_repo.delete_movie_repo(
-                movie_id=movie_id
-            )
+            self.movie_repo.delete_movie_repo(movie_id=movie_id)
 
-        return create_response(
-            message="Movie deleted successfully"
-        )
+        return create_response(message="Movie deleted successfully")

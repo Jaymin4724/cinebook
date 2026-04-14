@@ -14,22 +14,20 @@ if TYPE_CHECKING:
 
 class MovieModel(Base):
     __tablename__ = "movies"
-    
-    name : Mapped[str] = mapped_column(String(50), index=True, nullable=False)
-    duration : Mapped[timedelta] = mapped_column(INTERVAL)
-    description : Mapped[str] = mapped_column(String)
-    rating : Mapped[float] = mapped_column(
-        Numeric(3,1),
-        CheckConstraint('rating >= 0 AND rating <= 10'),
-        nullable=False
+
+    name: Mapped[str] = mapped_column(String(50), index=True, nullable=False)
+    duration: Mapped[timedelta] = mapped_column(INTERVAL)
+    description: Mapped[str] = mapped_column(String)
+    rating: Mapped[float] = mapped_column(
+        Numeric(3, 1), CheckConstraint("rating >= 0 AND rating <= 10"), nullable=False
     )
-    genre : Mapped[str] = mapped_column(String)
-    is_deleted : Mapped[bool] = mapped_column(Boolean, default=False)
-    imdb_id : Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    genre: Mapped[str] = mapped_column(String)
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    imdb_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
 
-    show_list : Mapped[list["ShowModel"]] = relationship(back_populates="movie")
-
+    show_list: Mapped[list["ShowModel"]] = relationship(back_populates="movie")
 
     async def soft_delete(self, db: AsyncSession):
+        """Mark movie as deleted."""
         self.is_deleted = True
         db.add(self)

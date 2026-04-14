@@ -17,6 +17,7 @@ async def get_movies_by_theatre(
     user_service: UserServiceDep,
     pagination: Annotated[PaginationSchema, Query()],
 ):
+    """Fetch movies running in a theatre."""
     return await user_service.get_movies_by_theatre_service(
         theatre_id=theatre_id, page=pagination.page, size=pagination.size
     )
@@ -32,6 +33,7 @@ async def get_theatres_by_movie(
     user_service: UserServiceDep,
     pagination: Annotated[PaginationSchema, Query()],
 ):
+    """Fetch theatres showing a movie."""
     return await user_service.get_theatres_by_movie_service(
         movie_id=movie_id, page=pagination.page, size=pagination.size
     )
@@ -53,6 +55,7 @@ async def get_shows(
     user_service: UserServiceDep,
     pagination: Annotated[PaginationSchema, Query()],
 ):
+    """Fetch shows for a movie in a theatre."""
     return await user_service.get_shows_service(
         theatre_id=theatre_id,
         movie_id=movie_id,
@@ -71,6 +74,7 @@ async def get_show_by_id(
     user_service: UserServiceDep,
     seat_layout_service: SeatLayoutServiceDep,
 ):
+    """Fetch show details with seat layout."""
     return await user_service.get_show_details_service(
         show_id=show_id, seat_layout_service=seat_layout_service
     )
@@ -88,6 +92,7 @@ async def lock_seat_route(
     user_service: UserServiceDep,
     seat_layout_service: SeatLayoutServiceDep,
 ):
+    """Lock selected seats for a show."""
     return await user_service.lock_seat_service(
         show_id=show_id,
         user_id=user_id,
@@ -107,20 +112,15 @@ async def book_tickets(
     seat_array: Annotated[list[str], Body(embed=True)],
     user_service: UserServiceDep,
 ):
+    """Book selected seats for a show."""
     return await user_service.book_ticket_service(
         show_id=show_id, user_id=user_id, seat_array=seat_array
     )
 
 
 @user_router.delete(
-    "/user/delete",
-    status_code=status.HTTP_200_OK,
-    response_model=ResponseSchema
+    "/user/delete", status_code=status.HTTP_200_OK, response_model=ResponseSchema
 )
-async def delete_user_router(
-    user_id: GetUserDep,
-    user_service: UserServiceDep
-):
-    return await user_service.delete_user_service(
-        user_id=user_id
-    )
+async def delete_user_router(user_id: GetUserDep, user_service: UserServiceDep):
+    """Delete current user account."""
+    return await user_service.delete_user_service(user_id=user_id)

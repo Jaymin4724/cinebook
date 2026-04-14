@@ -7,21 +7,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 if TYPE_CHECKING:
-    from app.models import TheatreModel,LayoutModel,ShowModel
+    from app.models import TheatreModel, LayoutModel, ShowModel
 
 
 class ScreenModel(Base):
     __tablename__ = "screens"
 
-    name : Mapped[str] = mapped_column(String(100), nullable=False)
-    theatre_id : Mapped[UUID] = mapped_column(ForeignKey("theatres.id"), index=False)
-    layout_id : Mapped[UUID] = mapped_column(ForeignKey("layouts.id"), index=False)
-    is_active : Mapped[bool] = mapped_column(Boolean, default=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    theatre_id: Mapped[UUID] = mapped_column(ForeignKey("theatres.id"), index=False)
+    layout_id: Mapped[UUID] = mapped_column(ForeignKey("layouts.id"), index=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    theatre : Mapped["TheatreModel"] = relationship(back_populates="screen_list")
-    layout : Mapped["LayoutModel"] = relationship(back_populates="screen")
-    show_list : Mapped[list["ShowModel"]] = relationship(back_populates="screen")
+    theatre: Mapped["TheatreModel"] = relationship(back_populates="screen_list")
+    layout: Mapped["LayoutModel"] = relationship(back_populates="screen")
+    show_list: Mapped[list["ShowModel"]] = relationship(back_populates="screen")
 
     async def soft_delete(self, db: AsyncSession):
+        """Mark screen as deleted."""
         self.is_active = False
         db.add(self)

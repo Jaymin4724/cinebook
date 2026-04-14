@@ -27,6 +27,7 @@ GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 
 
 class AuthService:
+    """Handle authentication related operations."""
 
     def __init__(
         self, redis: Redis, user_repo: UserRepository, email_service: EmailService
@@ -37,7 +38,7 @@ class AuthService:
         self.email_service = email_service
 
     async def auth_send_otp_service(self, email: str) -> ResponseSchema:
-
+        """Generate OTP, store it, and send it to user email."""
         otp = generate_otp()
 
         await self.redis.hset(name=email, mapping={"otp": otp, "tries": 3})
@@ -53,10 +54,10 @@ class AuthService:
         db: AsyncSession,
         response: Response,
     ) -> ResponseSchema:
-
+        """Verify OTP and log in or create the user."""
         user_email = user_signin_body.get("email")
         user_otp = user_signin_body.get("otp")
-        self.user_repo.db = db 
+        self.user_repo.db = db
 
         await validate_otp(email=user_email, otp=user_otp, redis=self.redis)
 
@@ -81,6 +82,7 @@ class AuthService:
                 return create_response(data=tokens, message="User created successfully")
 
     def auth_login_google_service(self):
+        """Generate Google OAuth URL and redirect user."""
         params = {
             "client_id": GOOGLE_CLIENT_ID,
             "redirect_uri": GOOGLE_REDIRECT_URI,
@@ -95,7 +97,7 @@ class AuthService:
     async def auth_google_callback_service(
         self, code: str, db: AsyncSession, response: Response
     ):
-
+        """Handle Google OAuth callback and log in the user."""
         token_data = {
             "code": code,
             "client_id": GOOGLE_CLIENT_ID,
