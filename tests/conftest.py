@@ -10,8 +10,7 @@ from unittest.mock import AsyncMock
 
 from app.main import app
 from app.db.base import Base
-from app.api.dependencies import get_db, get_redis
-from app.services.email_service import EmailService
+from app.api.dependencies import get_db, get_redis, get_email_service
 from app.core.config import settings
 
 engine = create_async_engine(
@@ -40,20 +39,33 @@ async def setup_database():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         queries = [
-            "TRUNCATE TABLE roles, users, permissions, roles_permissions_map, theatres, movies, screens, layouts, user_details CASCADE;",
+            # 1. Truncate with new tables (bookings included)
+            "TRUNCATE TABLE roles, users, permissions, roles_permissions_map, theatres, movies, screens, layouts, bookings, user_details CASCADE;",
+            # 2. Insert Roles
             "INSERT INTO roles (role) VALUES ('user'), ('admin'), ('theatre_admin');",
-            "INSERT INTO permissions (permission) VALUES ('create-user'), ('create-theatre'), ('create-movie'), ('read-users'), ('read-theatres'), ('read-movies'), ('create-layout'), ('create-screen');",
+            # 3. Insert All Permissions
+            """INSERT INTO permissions (permission) VALUES 
+               ('create-user'), ('read-users'), 
+               ('create-theatre'), ('read-theatres'), ('delete-theatre'),
+               ('create-movie'), ('read-movies'), ('delete-movie'),
+               ('create-layout'), 
+               ('create-screen'), ('delete-screen'),
+               ('create-show'), ('delete-show');""",
+            # 4. Map Theatre Admin Permissions
             """INSERT INTO roles_permissions_map (role_id, permission_id)
                SELECT r.id, p.id FROM roles r, permissions p 
-               WHERE r.role = 'admin' AND p.permission IN ('read-users', 'read-theatres', 'read-movies', 'create-user', 'create-theatre', 'create-movie');""",
+               WHERE r.role = 'theatre_admin' 
+               AND p.permission IN ('create-layout', 'create-screen', 'delete-screen', 'create-show', 'delete-show');""",
+            # 4b. Map Admin Permissions (Gets Everything)
             """INSERT INTO roles_permissions_map (role_id, permission_id)
                SELECT r.id, p.id FROM roles r, permissions p 
-               WHERE r.role = 'theatre_admin' AND p.permission IN ('create-layout', 'create-screen');""",
+               WHERE r.role = 'admin';""",
+            # 5. Insert Users
             """INSERT INTO users (email, is_active, role_id) VALUES 
                ('jaymin.dave@armakuni.com', TRUE, (SELECT id FROM roles WHERE role = 'admin' LIMIT 1)),
                ('jaymin4724@gmail.com', TRUE, (SELECT id FROM roles WHERE role = 'theatre_admin' LIMIT 1));""",
-            """INSERT INTO user_details (user_id) 
-               SELECT id FROM users WHERE email IN ('jaymin.dave@armakuni.com', 'jaymin4724@gmail.com');""",
+            # 6. Insert User Details
+            "INSERT INTO user_details (user_id) SELECT id FROM users;",
         ]
         for query in queries:
             await conn.execute(text(query))
@@ -72,12 +84,12 @@ async def db():
 
 @pytest.fixture
 async def client(db):
-    mock_email = AsyncMock(spec=EmailService)
-    mock_email.send_otp_email = AsyncMock(return_value=None)
+    mock_email_instance = AsyncMock(spec=get_email_service)
+    mock_email_instance.send_otp_email = AsyncMock(return_value=None)
 
     app.dependency_overrides[get_db] = lambda: db
     app.dependency_overrides[get_redis] = lambda: global_fake_redis
-    app.dependency_overrides[EmailService] = lambda: mock_email
+    app.dependency_overrides[get_email_service] = lambda: mock_email_instance
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:

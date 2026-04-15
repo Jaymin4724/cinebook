@@ -166,13 +166,16 @@ def permission_required(permission: str):
 
     async def permission_dependency(
         user_id: GetUserDep,
+        db: DBDep,
         permission_repo: PermissionRepoDep,
     ):
-        if not await permission_repo.permission_check_repo(
-            user_id=user_id, permission=permission
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied"
-            )
+        async with db.begin():
+            permission_repo.db = db
+            if not await permission_repo.permission_check_repo(
+                user_id=user_id, permission=permission
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied"
+                )
 
     return permission_dependency
