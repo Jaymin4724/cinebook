@@ -1,6 +1,7 @@
 from typing import Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends, HTTPException, Header, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.redis_config import get_redis, Redis
 from app.db.session import get_db
 from app.utils.helper import decode_token
@@ -31,6 +32,7 @@ RedisDep = Annotated[Redis, Depends(get_redis)]
 # --- REPOSITORY FACTORIES ---
 def get_repo(repo_class):
     """Return repository instance with database dependency."""
+
     def _get_repo(db: DBDep):
         return repo_class(db=db)
 
@@ -46,6 +48,7 @@ ScreenRepoDep = Annotated[ScreenRepository, Depends(get_repo(ScreenRepository))]
 ShowRepoDep = Annotated[ShowRepository, Depends(get_repo(ShowRepository))]
 BookingRepoDep = Annotated[BookingRepository, Depends(get_repo(BookingRepository))]
 
+
 # --- SERVICE FACTORIES ---
 def get_email_service() -> EmailService:
     """Create email service instance."""
@@ -57,8 +60,8 @@ EmailServiceDep = Annotated[EmailService, Depends(get_email_service)]
 
 def get_auth_service(
     redis: RedisDep, user_repo: UserRepoDep, email_service: EmailServiceDep
-    """Create auth service with required dependencies."""
 ) -> AuthService:
+    """Create auth service with required dependencies."""
     return AuthService(redis=redis, user_repo=user_repo, email_service=email_service)
 
 
@@ -86,7 +89,7 @@ def get_user_service(
     theatre_repo: TheatreRepoDep,
     show_repo: ShowRepoDep,
     booking_repo: BookingRepoDep,
-    user_repo: UserRepoDep
+    user_repo: UserRepoDep,
 ) -> UserService:
     """Create user service with required dependencies."""
     return UserService(
@@ -96,7 +99,7 @@ def get_user_service(
         theatre_repo=theatre_repo,
         show_repo=show_repo,
         booking_repo=booking_repo,
-        user_repo=user_repo
+        user_repo=user_repo,
     )
 
 
@@ -135,15 +138,16 @@ TheatreAdminServiceDep = Annotated[
 ]
 SeatLayoutServiceDep = Annotated[SeatLayoutService, Depends(get_seat_layout_service)]
 
-# --- AUTHENTICATION HELPERS ---
-def get_user_id(authorization: str = Header(...)) -> str:
-    """Extract user ID from access token."""
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token format"
-        )
+security = HTTPBearer()
 
-    token = authorization.split(" ")[1]
+
+# --- AUTHENTICATION HELPERS ---
+async def get_user_id(
+    token_data: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+) -> str:
+    """Extract user ID from access token using HTTPBearer."""
+    token = token_data.credentials
+
     payload = decode_token(token=token, secret=settings.JWT_SECRET_ACCESS_KEY)
 
     if not payload or "sub" not in payload:
@@ -159,18 +163,16 @@ GetUserDep = Annotated[str, Depends(get_user_id)]
 
 def permission_required(permission: str):
     """Check if user has required permission."""
+
     async def permission_dependency(
         user_id: GetUserDep,
-        db: DBDep,
         permission_repo: PermissionRepoDep,
     ):
-        async with db.begin():
-            permission_repo.db = db
-            if not await permission_repo.permission_check_repo(
-                user_id=user_id, permission=permission
-            ):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied"
-                )
+        if not await permission_repo.permission_check_repo(
+            user_id=user_id, permission=permission
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied"
+            )
 
     return permission_dependency

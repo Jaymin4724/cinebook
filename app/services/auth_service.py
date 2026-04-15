@@ -149,8 +149,10 @@ class AuthService:
                     )
                     user.user_detail.last_name = user.user_detail.last_name or last_name
 
-            generate_access_token_and_refresh_token(
+            tokens = generate_access_token_and_refresh_token(
                 payload={"user_id": str(user.id)}, response=response
             )
 
-        return create_response(data={"email": user.email}, message="Login successful")
+        return create_response(
+            data={"email": user.email, **tokens}, message="Login successful"
+        )
