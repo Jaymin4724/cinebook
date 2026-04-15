@@ -90,7 +90,4 @@ def generate_access_token_and_refresh_token(payload: dict, response: Response):
         secret=settings.JWT_SECRET_REFRESH_KEY,
         token_type="refresh",
     )
-
-    response.set_cookie(key="access_token", value=access_token, httponly=True)
-    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True)
     return {"access_token": access_token, "refresh_token": refresh_token}
