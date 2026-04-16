@@ -12,7 +12,7 @@ search_router = APIRouter(prefix="/search", tags=["search"])
     status_code=status.HTTP_200_OK,
     response_model=ResponseSchema,
 )
-async def global_search_router(
+async def global_search_route(
     q: Annotated[
         str, Query(min_length=1, description="Search for movie or theatre name")
     ],

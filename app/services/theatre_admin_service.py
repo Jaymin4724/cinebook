@@ -6,6 +6,7 @@ from app.repositories.theatre_repository import TheatreRepository
 from app.repositories.movie_repository import MovieRepository
 from app.repositories.show_repository import ShowRepository
 from app.schemas.standard_schema import ResponseSchema, create_response
+from app.schemas.screen_schema import ScreenOutSchema
 from fastapi import HTTPException, status
 from app.utils.polish_seat_layout import polish_seat_layout
 from app.utils.show_create_validation import (
@@ -68,11 +69,12 @@ class TheatreAdminService:
                     detail="Layout format is not valid",
                 )
 
-            await self.layout_repo.create_layout_repository(
+            new_layout = await self.layout_repo.create_layout_repository(
                 name=layout_name, layout=new_layout, theatre_id=theatre_id
             )
-
-        return create_response(message="New layout created successfully")
+        return create_response(
+            data={"id": new_layout.id}, message="New layout created successfully"
+        )
 
     async def create_screen_service(
         self, screen_body: dict, user_id: str
@@ -104,11 +106,12 @@ class TheatreAdminService:
                     status_code=status.HTTP_404_NOT_FOUND, detail="Layout not found"
                 )
 
-            await self.screen_repo.create_screen_repo(
+            new_screen = await self.screen_repo.create_screen_repo(
                 name=screen_name, theatre_id=theatre_id, layout_id=layout_id
             )
 
-        return create_response(message="Screen created successfully")
+        screen_data = ScreenOutSchema.model_validate(new_screen).model_dump(mode="json")
+        return create_response(data=screen_data, message="Screen created successfully")
 
     async def create_show_service(
         self, show_body: dict, user_id: str
@@ -164,7 +167,9 @@ class TheatreAdminService:
                 category_pricing=category_price,
             )
 
-        return create_response(message="Show created successfully")
+        return create_response(
+            data={"id": new_show.id}, message="Show created successfully"
+        )
 
     async def delete_screen_service(self, screen_id: str, user_id: str):
         """Delete screen by ID after validation."""

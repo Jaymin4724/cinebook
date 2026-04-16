@@ -121,6 +121,6 @@ async def book_tickets(
 @user_router.delete(
     "/user/delete", status_code=status.HTTP_200_OK, response_model=ResponseSchema
 )
-async def delete_user_router(user_id: GetUserDep, user_service: UserServiceDep):
+async def delete_user_route(user_id: GetUserDep, user_service: UserServiceDep):
     """Delete current user account."""
     return await user_service.delete_user_service(user_id=user_id)

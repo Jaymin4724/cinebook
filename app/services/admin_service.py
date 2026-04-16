@@ -86,7 +86,7 @@ class AdminService:
             data=theatre_data, message="Theatre created successfully"
         )
 
-    async def create_new_movie_service(self, imdb_id: int) -> ResponseSchema:
+    async def create_new_movie_service(self, imdb_id: str) -> ResponseSchema:
         """Fetch movie data from OMDB and create new movie."""
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -94,7 +94,7 @@ class AdminService:
             )
             data = response.json()
 
-        if data.get("Response") == False:
+        if data.get("Response") == "False":
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found"
             )
@@ -122,35 +122,43 @@ class AdminService:
             )
 
         movie_data = MovieOutSchema.model_validate(movie).model_dump(mode="json")
+        print(movie_data)
         return create_response(data=movie_data, message="Movie created successfully")
 
     async def get_all_users_service(self, page: int = 1, size: int = 10):
         """Fetch paginated list of users."""
-        users = await self.user_repo.get_all_users_repo(page, size)
-        users_data = [
-            UserOutSchema.model_validate(user).model_dump(mode="json") for user in users
-        ]
+        async with self.db.begin():
+            self.user_repo.db = self.db
+            users = await self.user_repo.get_all_users_repo(page, size)
+            users_data = [
+                UserOutSchema.model_validate(user).model_dump(mode="json")
+                for user in users
+            ]
         return create_response(data=users_data, message="Users fetched successfully")
 
     async def get_all_theatres_service(self, page: int = 1, size: int = 10):
         """Fetch paginated list of theatres."""
-        theatres = await self.theatre_repo.get_all_theatres_repo(page, size)
-        theatres_data = [
-            TheatreOutSchema.model_validate(theatre).model_dump(mode="json")
-            for theatre in theatres
-        ]
+        async with self.db.begin():
+            self.theatre_repo.db = self.db
+            theatres = await self.theatre_repo.get_all_theatres_repo(page, size)
+            theatres_data = [
+                TheatreOutSchema.model_validate(theatre).model_dump(mode="json")
+                for theatre in theatres
+            ]
         return create_response(
             data=theatres_data, message="Theatres fetched successfully"
         )
 
     async def get_all_movies_service(self, page: int = 1, size: int = 10):
         """Fetch paginated list of movies."""
-        movies = await self.movie_repo.get_all_movies(page, size)
+        async with self.db.begin():
+            self.movie_repo.db = self.db
+            movies = await self.movie_repo.get_all_movies(page, size)
 
-        movies_data = [
-            MovieOutSchema.model_validate(movie).model_dump(mode="json")
-            for movie in movies
-        ]
+            movies_data = [
+                MovieOutSchema.model_validate(movie).model_dump(mode="json")
+                for movie in movies
+            ]
         return create_response(data=movies_data, message="Movies fetched successfully")
 
     async def delete_theatre_service(self, theatre_id: str):
@@ -167,6 +175,6 @@ class AdminService:
         async with self.db.begin():
             self.movie_repo.db = self.db
 
-            self.movie_repo.delete_movie_repo(movie_id=movie_id)
+            await self.movie_repo.delete_movie_repo(movie_id=movie_id)
 
         return create_response(message="Movie deleted successfully")

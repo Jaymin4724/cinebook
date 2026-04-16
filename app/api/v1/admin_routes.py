@@ -46,7 +46,7 @@ async def create_theatre_route(
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("create-movie"))],
 )
-async def create_movie_router(
+async def create_movie_route(
     imdb_id: Annotated[str, Body(embed=True)], admin_service: AdminServiceDep
 ):
     """Create a new movie using IMDB ID."""
@@ -59,7 +59,7 @@ async def create_movie_router(
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("read-users"))],
 )
-async def get_all_users_router(
+async def get_all_users_route(
     admin_service: AdminServiceDep, pagination: Annotated[PaginationSchema, Query()]
 ):
     """Fetch all users with pagination."""
@@ -74,7 +74,7 @@ async def get_all_users_router(
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("read-theatres"))],
 )
-async def get_all_theatres_router(
+async def get_all_theatres_route(
     admin_service: AdminServiceDep, pagination: Annotated[PaginationSchema, Query()]
 ):
     """Fetch all theatres with pagination."""
@@ -89,7 +89,7 @@ async def get_all_theatres_router(
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("read-movies"))],
 )
-async def get_all_movies_router(
+async def get_all_movies_route(
     admin_service: AdminServiceDep, pagination: Annotated[PaginationSchema, Query()]
 ):
     """Fetch all movies with pagination."""
@@ -104,17 +104,16 @@ async def get_all_movies_router(
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-theatre"))],
 )
-async def delete_theatre_router(theatre_id: str, admin_service: AdminServiceDep):
+async def delete_theatre_route(theatre_id: str, admin_service: AdminServiceDep):
     """Delete theatre by ID."""
     return await admin_service.delete_theatre_service(theatre_id=theatre_id)
 
 
 @admin_router.delete(
     "/movie/delete",
-    status_code=status.HTTP_404_NOT_FOUND,
+    status_code=status.HTTP_200_OK,
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-movie"))],
 )
-async def delete_movie_router(movie_id: str, admin_services: AdminServiceDep):
-    """Delete movie by ID."""
-    return await admin_services.delete_movie_service(movie_id=movie_id)
+async def delete_movie_route(movie_id: str, admin_service: AdminServiceDep):
+    return await admin_service.delete_movie_service(movie_id=movie_id)
