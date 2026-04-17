@@ -65,13 +65,13 @@ async def create_show_route(
 
 
 @theatre_admin_router.delete(
-    "/screen/delete",
+    "/screen/delete/{screen_id}",
     status_code=status.HTTP_200_OK,
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-screen"))],
 )
 async def delete_screen_route(
-    screen_id: Annotated[str,Body(embed=True)], user_id: GetUserDep, theatre_admin_service: TheatreAdminServiceDep
+    screen_id: str, user_id: GetUserDep, theatre_admin_service: TheatreAdminServiceDep
 ):
     """Delete screen by ID."""
     return await theatre_admin_service.delete_screen_service(
@@ -80,13 +80,13 @@ async def delete_screen_route(
 
 
 @theatre_admin_router.delete(
-    "/show/delete",
+    "/show/delete/{show_id}",
     status_code=status.HTTP_200_OK,
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-show"))],
 )
 async def delete_show_route(
-    show_id: Annotated[str,Body(embed=True)], user_id: GetUserDep, theatre_admin_service: TheatreAdminServiceDep
+    show_id: str, user_id: GetUserDep, theatre_admin_service: TheatreAdminServiceDep
 ):
     """Delete show by ID."""
     return await theatre_admin_service.delete_show_service(
