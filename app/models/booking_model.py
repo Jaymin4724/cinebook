@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from app.models import UserModel,ShowModel,BookedSeatMapModel
+    from app.models import UserModel,ShowModel,BookedSeatMapModel,BookedTicketModel
 
 
 class BookingModel(Base):
@@ -20,5 +20,5 @@ class BookingModel(Base):
 
     user : Mapped["UserModel"] = relationship(back_populates="booking_list")
     show : Mapped["ShowModel"] = relationship(back_populates="booking_list")
-    # booked_seat_list: Mapped["BookedSeatMapModel"] = relationship(back_populates="booking")
     booked_seat_list: Mapped[list["BookedSeatMapModel"]] = relationship(back_populates="booking")
+    booked_ticket: Mapped["BookedTicketModel"] = relationship(back_populates="booking")

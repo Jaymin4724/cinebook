@@ -5,6 +5,11 @@ from fastapi import Response, HTTPException, status
 from app.core.config import settings
 from app.core.redis_config import Redis
 
+import base64
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
 
 def generate_otp() -> str:
     """Generate a 6-digit numeric OTP."""
@@ -91,3 +96,27 @@ def generate_access_token_and_refresh_token(payload: dict, response: Response):
         token_type="refresh",
     )
     return {"access_token": access_token, "refresh_token": refresh_token}
+
+
+async def fernet_key():
+    ENCRYPTION_PASSWORD = settings.ENCRYPTION_PASSWORD.encode()
+    ENCRYPTION_STATIC_SALT = settings.ENCRYPTION_STATIC_SALT.encode()
+
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=ENCRYPTION_STATIC_SALT,
+        iterations=480000,
+    )
+
+    key = base64.urlsafe_b64encode(kdf.derive(ENCRYPTION_PASSWORD))
+    return Fernet(key)
+
+async def encrypt_data(data: str):
+    cipher_suite = await fernet_key()
+    return cipher_suite.encrypt(data.encode())
+
+
+async def decrypt_data(encrypted_data: str):
+    cipher_suite = await fernet_key()
+    return cipher_suite.decrypt(encrypted_data).decode()

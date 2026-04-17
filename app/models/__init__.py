@@ -11,3 +11,4 @@ from app.models.movie_model import MovieModel
 from app.models.show_model import ShowModel
 from app.models.booking_model import BookingModel
 from app.models.booked_seat_map_model import BookedSeatMapModel
+from app.models.booked_ticket_model import BookedTicketModel

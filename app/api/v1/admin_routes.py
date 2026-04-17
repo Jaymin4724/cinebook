@@ -104,7 +104,7 @@ async def get_all_movies_route(
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-theatre"))],
 )
-async def delete_theatre_route(theatre_id: str, admin_service: AdminServiceDep):
+async def delete_theatre_router(theatre_id: Annotated[str,Body(embed=True)], admin_service: AdminServiceDep):
     """Delete theatre by ID."""
     return await admin_service.delete_theatre_service(theatre_id=theatre_id)
 
@@ -115,5 +115,6 @@ async def delete_theatre_route(theatre_id: str, admin_service: AdminServiceDep):
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-movie"))],
 )
-async def delete_movie_route(movie_id: str, admin_service: AdminServiceDep):
-    return await admin_service.delete_movie_service(movie_id=movie_id)
+async def delete_movie_router(movie_id: Annotated[str,Body(embed=True)], admin_services: AdminServiceDep):
+    """Delete movie by ID."""
+    return await admin_services.delete_movie_service(movie_id=movie_id)

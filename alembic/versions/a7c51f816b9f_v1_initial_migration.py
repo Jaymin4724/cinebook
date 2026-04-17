@@ -1,8 +1,8 @@
-"""V1_initial_database_setup
+"""v1_initial_migration
 
-Revision ID: 78a3c685dea6
+Revision ID: a7c51f816b9f
 Revises: 
-Create Date: 2026-03-30 16:17:21.490987
+Create Date: 2026-04-16 16:42:01.498849
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '78a3c685dea6'
+revision: str = 'a7c51f816b9f'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,12 +26,14 @@ def upgrade() -> None:
     sa.Column('duration', postgresql.INTERVAL(), nullable=False),
     sa.Column('description', sa.String(), nullable=False),
     sa.Column('rating', sa.Numeric(precision=3, scale=1), nullable=False),
-    sa.Column('genre', postgresql.ARRAY(sa.Enum('ACTION', 'SCIFI', 'COMEDY', 'THRILLER', 'ROMANCE', 'DRAMA', 'ANIMATION', 'CRIME', 'HORROR', 'FANTASY', 'OTHER', name='movie_genre_enum')), nullable=False),
+    sa.Column('genre', sa.String(), nullable=False),
     sa.Column('is_deleted', sa.Boolean(), nullable=False),
+    sa.Column('imdb_id', sa.String(), nullable=False),
     sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('imdb_id')
     )
     op.create_index(op.f('ix_movies_name'), 'movies', ['name'], unique=False)
     op.create_table('permissions',
@@ -81,11 +83,9 @@ def upgrade() -> None:
     op.create_index(op.f('ix_roles_permissions_map_permission_id'), 'roles_permissions_map', ['permission_id'], unique=False)
     op.create_index(op.f('ix_roles_permissions_map_role_id'), 'roles_permissions_map', ['role_id'], unique=False)
     op.create_table('users',
-    sa.Column('username', sa.String(length=50), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
-    sa.Column('password', sa.String(length=255), nullable=False),
+    sa.Column('google_id', sa.String(length=255), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.Column('is_verified', sa.Boolean(), nullable=False),
     sa.Column('role_id', sa.UUID(), nullable=False),
     sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
@@ -94,8 +94,8 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
+    op.create_index(op.f('ix_users_google_id'), 'users', ['google_id'], unique=True)
     op.create_index(op.f('ix_users_role_id'), 'users', ['role_id'], unique=False)
-    op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
     op.create_table('screens',
     sa.Column('name', sa.String(length=100), nullable=False),
     sa.Column('theatre_id', sa.UUID(), nullable=False),
@@ -136,6 +136,7 @@ def upgrade() -> None:
     sa.Column('start_time', sa.DateTime(), nullable=False),
     sa.Column('screen_id', sa.UUID(), nullable=False),
     sa.Column('movie_id', sa.UUID(), nullable=False),
+    sa.Column('category_pricing', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('is_deleted', sa.Boolean(), nullable=False),
     sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
@@ -149,7 +150,6 @@ def upgrade() -> None:
     op.create_table('bookings',
     sa.Column('total_bill', sa.Float(), nullable=False),
     sa.Column('number_of_seats', sa.Integer(), nullable=False),
-    sa.Column('seats_array', sa.ARRAY(sa.String()), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.Column('show_id', sa.UUID(), nullable=False),
     sa.Column('is_cancelled', sa.Boolean(), nullable=False),
@@ -162,12 +162,44 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_bookings_show_id'), 'bookings', ['show_id'], unique=False)
     op.create_index(op.f('ix_bookings_user_id'), 'bookings', ['user_id'], unique=False)
+    op.create_table('booked_seats_map',
+    sa.Column('seats_number', sa.String(), nullable=False),
+    sa.Column('booking_id', sa.UUID(), nullable=False),
+    sa.Column('show_id', sa.UUID(), nullable=False),
+    sa.Column('is_cancelled', sa.Boolean(), nullable=False),
+    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['booking_id'], ['bookings.id'], ),
+    sa.ForeignKeyConstraint(['show_id'], ['shows.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_booked_seats_map_booking_id'), 'booked_seats_map', ['booking_id'], unique=False)
+    op.create_index(op.f('ix_booked_seats_map_show_id'), 'booked_seats_map', ['show_id'], unique=False)
+    op.create_table('booked_tickets',
+    sa.Column('booking_id', sa.UUID(), nullable=False),
+    sa.Column('ticket_hash', sa.LargeBinary(), nullable=False),
+    sa.Column('expired_time', sa.DateTime(), nullable=False),
+    sa.Column('is_used', sa.Boolean(), server_default='false', nullable=False),
+    sa.Column('id', sa.UUID(), server_default=sa.text('gen_random_uuid()'), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
+    sa.ForeignKeyConstraint(['booking_id'], ['bookings.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('ticket_hash')
+    )
+    op.create_index(op.f('ix_booked_tickets_booking_id'), 'booked_tickets', ['booking_id'], unique=True)
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index(op.f('ix_booked_tickets_booking_id'), table_name='booked_tickets')
+    op.drop_table('booked_tickets')
+    op.drop_index(op.f('ix_booked_seats_map_show_id'), table_name='booked_seats_map')
+    op.drop_index(op.f('ix_booked_seats_map_booking_id'), table_name='booked_seats_map')
+    op.drop_table('booked_seats_map')
     op.drop_index(op.f('ix_bookings_user_id'), table_name='bookings')
     op.drop_index(op.f('ix_bookings_show_id'), table_name='bookings')
     op.drop_table('bookings')
@@ -180,8 +212,8 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_theatre_operators_map_theatre_id'), table_name='theatre_operators_map')
     op.drop_table('theatre_operators_map')
     op.drop_table('screens')
-    op.drop_index(op.f('ix_users_username'), table_name='users')
     op.drop_index(op.f('ix_users_role_id'), table_name='users')
+    op.drop_index(op.f('ix_users_google_id'), table_name='users')
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
     op.drop_index(op.f('ix_roles_permissions_map_role_id'), table_name='roles_permissions_map')

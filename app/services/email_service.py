@@ -2,6 +2,8 @@ from pathlib import Path
 from fastapi import HTTPException, status
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from app.core.config import settings
+import qrcode
+import tempfile
 
 
 class EmailService:
@@ -46,4 +48,41 @@ class EmailService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to send verification email.",
+            )
+        
+
+    async def send_qr_ticket(self, email_to: str, ticket_hash: str):
+        
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(ticket_hash.decode('utf-8'))
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
+            img.save(temp_file.name)
+            temp_path = temp_file.name
+        
+        body = f"""
+        <html>
+            <body style="text-align: center;">
+                <h1>Your Digital Ticket</h1>
+                <img src="cid:ticket_qr" alt="QR Code" />
+            </body>
+        </html>
+        """
+        
+        message = MessageSchema(
+            subject="Your Digital Ticket",
+            recipients=[email_to],
+            body=body,
+            subtype=MessageType.html,
+            attachments=[temp_path]
+        )
+        
+        try:
+            await self.fastmail.send_message(message)
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send ticket email.",
             )

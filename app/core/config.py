@@ -30,6 +30,9 @@ class Settings(BaseSettings):
 
     ES_URL: str
 
+    ENCRYPTION_PASSWORD: str
+    ENCRYPTION_STATIC_SALT: str
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

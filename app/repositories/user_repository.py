@@ -96,3 +96,26 @@ class UserRepository:
             )
 
         await user_found.soft_delete(db=self.db)
+
+    async def get_user_by_id(
+        self,
+        user_id: str
+    ):
+
+        query = select(
+            UserModel
+        ).where(
+            UserModel.id == user_id
+        )
+
+        result = await self.db.execute(query)
+
+        user_found = result.scalar_one_or_none()
+
+        if not user_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        return user_found
