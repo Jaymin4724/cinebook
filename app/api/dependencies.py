@@ -24,6 +24,7 @@ from app.repositories.layout_repository import LayoutRepository
 from app.repositories.screen_repository import ScreenRepository
 from app.repositories.show_repository import ShowRepository
 from app.repositories.booking_repository import BookingRepository
+from app.repositories.booked_ticket_repository import BookingTicketRepository
 
 DBDep = Annotated[AsyncSession, Depends(get_db)]
 RedisDep = Annotated[Redis, Depends(get_redis)]
@@ -47,6 +48,7 @@ LayoutRepoDep = Annotated[LayoutRepository, Depends(get_repo(LayoutRepository))]
 ScreenRepoDep = Annotated[ScreenRepository, Depends(get_repo(ScreenRepository))]
 ShowRepoDep = Annotated[ShowRepository, Depends(get_repo(ShowRepository))]
 BookingRepoDep = Annotated[BookingRepository, Depends(get_repo(BookingRepository))]
+BookingTicketRepositoryDep = Annotated[BookingTicketRepository, Depends(get_repo(BookingTicketRepository))]
 
 
 # --- SERVICE FACTORIES ---
@@ -90,6 +92,8 @@ def get_user_service(
     show_repo: ShowRepoDep,
     booking_repo: BookingRepoDep,
     user_repo: UserRepoDep,
+    booked_ticket_repo: BookingTicketRepositoryDep,
+    email_service: EmailServiceDep
 ) -> UserService:
     """Create user service with required dependencies."""
     return UserService(
@@ -100,6 +104,8 @@ def get_user_service(
         show_repo=show_repo,
         booking_repo=booking_repo,
         user_repo=user_repo,
+        booked_ticket_repo=booked_ticket_repo,
+        email_service=email_service
     )
 
 

@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from app.api.routes import api_router
 from app.core.es_config import es, create_index
+from app.middlewares import GlobalExceptionHandlerMiddleware, RateLimitingMiddleware
 
 # Note: Keep the import of search_sync to ensure listeners are registered
 from app.services import search_sync
@@ -21,5 +22,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(RateLimitingMiddleware,capacity=10,refill_rate=0.1)
+app.add_middleware(GlobalExceptionHandlerMiddleware)
 
 app.include_router(api_router)
