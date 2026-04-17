@@ -4,6 +4,7 @@ from app.repositories.movie_repository import MovieRepository
 from app.repositories.theatre_repository import TheatreRepository
 from app.repositories.booking_repository import BookingRepository
 from app.repositories.user_repository import UserRepository
+from app.repositories.booked_ticket_repository import BookingTicketRepository
 
 from app.repositories.show_repository import ShowRepository
 from app.services.seat_layout_service import SeatLayoutService
@@ -12,6 +13,9 @@ from app.schemas.theatre_schema import TheatreOutSchema
 from app.schemas.standard_schema import ResponseSchema, create_response
 from app.schemas.show_schema import ShowDetailOutSchema
 from fastapi import status, HTTPException
+from app.services.email_service import EmailService
+
+from app.utils.helper import encrypt_data
 
 from uuid import UUID
 
@@ -28,6 +32,8 @@ class UserService:
         show_repo: ShowRepository,
         booking_repo: BookingRepository,
         user_repo: UserRepository,
+        booked_ticket_repo: BookingTicketRepository,
+        email_service: EmailService
     ):
         self.db = db
         self.redis = redis
@@ -36,6 +42,8 @@ class UserService:
         self.show_repo = show_repo
         self.booking_repo = booking_repo
         self.user_repo = user_repo
+        self.booked_ticket_repo = booked_ticket_repo
+        self.email_service = email_service
 
     async def get_movies_by_theatre_service(
         self, theatre_id: str, page: int = 1, size: int = 10
@@ -201,12 +209,38 @@ class UserService:
             total_bill += price
 
         async with self.db.begin():
+            self.show_repo.db = self.db
+            self.booking_repo.db = self.db
+
             booking = await self.booking_repo.create_booking_repo(
                 user_id=UUID(user_id),
                 show_id=UUID(show_id),
                 seat_array=seat_array,
                 total_bill=total_bill,
             )
+
+            booking_id = booking.id
+
+            show_end_time = await self.show_repo.get_show_end_time(
+                show_id=show_id
+            )
+
+            ticket_hash = await encrypt_data(data=str(booking_id))
+
+            ticket = await self.booked_ticket_repo.create_booking_ticket(
+                booking_id=booking_id,
+                expired_time=show_end_time,
+                ticket_hash=ticket_hash
+            )
+
+            user = await self.user_repo.get_user_by_id(
+                user_id=user_id
+            )
+
+        await self.email_service.send_qr_ticket(
+            email_to=user.email,
+            ticket_hash=ticket_hash
+        )
 
         if layout_body:
             for seat in seat_array:

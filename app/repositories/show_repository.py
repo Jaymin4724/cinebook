@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
-from app.models import ShowModel, ScreenModel, TheatreModel, TheatreOperatorMapModel
+from app.models import ShowModel, ScreenModel, TheatreModel, TheatreOperatorMapModel, MovieModel
 from sqlalchemy import select, desc
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.orm import selectinload, joinedload
 from app.services.seat_layout_service import SeatLayoutService
 from fastapi import HTTPException, status
@@ -135,3 +135,29 @@ class ShowRepository:
             )
 
         await show_found.soft_delete(db=self.db)
+
+    async def get_show_end_time(self, show_id: str):
+
+        query = select(
+            ShowModel.start_time,
+            MovieModel.duration
+        ).join(
+            MovieModel, ShowModel.movie_id == MovieModel.id
+        ).where(
+            ShowModel.id == show_id
+        )
+
+        result = await self.db.execute(query)
+
+        show_found = result.first()
+
+        if not show_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Show not found"
+            )
+
+        show_start_time = show_found.start_time
+        movie_duration_seconds = show_found.duration.total_seconds()
+
+        return show_start_time + timedelta(seconds=movie_duration_seconds)
+
