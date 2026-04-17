@@ -16,7 +16,7 @@ class LayoutModel(Base):
 
     name : Mapped[str] = mapped_column(String(100), nullable=False)
     layout : Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=False)
-    theatre_id : Mapped[UUID] = mapped_column(ForeignKey("theatres.id"), index=False)
+    theatre_id : Mapped[UUID] = mapped_column(ForeignKey("theatres.id"), index=True)
 
     theatre : Mapped["TheatreModel"] = relationship(back_populates="layout_list")
     screen : Mapped["ScreenModel"] = relationship(back_populates="layout")

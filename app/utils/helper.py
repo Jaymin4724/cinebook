@@ -117,6 +117,6 @@ async def encrypt_data(data: str):
     return cipher_suite.encrypt(data.encode())
 
 
-async def decrypt_data(encrypted_data: str):
+async def decrypt_data(encrypted_data: bytes):
     cipher_suite = await fernet_key()
     return cipher_suite.decrypt(encrypted_data).decode()
