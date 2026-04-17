@@ -78,7 +78,7 @@ class TheatreRepository:
                 ShowModel.movie_id == movie_id,
                 TheatreModel.is_active == True,
                 ShowModel.is_deleted == False,
-                ShowModel.start_time > datetime.now(timezone.utc),
+                ShowModel.start_time > datetime.now(timezone.utc).replace(tzinfo=None),
             )
             .distinct()
             .offset(skip)

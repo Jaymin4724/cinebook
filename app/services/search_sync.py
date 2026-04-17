@@ -11,7 +11,7 @@ async def async_sync_to_es(instance_data):
     doc_id = f"{model_type}_{instance_data['id']}"
 
     if instance_data.get("is_hidden"):
-        await es.delete(index=index_name, id=doc_id, ignore=[404])
+        await es.options(ignore_status=[404]).delete(index=index_name, id=doc_id)
         return
 
     doc = {

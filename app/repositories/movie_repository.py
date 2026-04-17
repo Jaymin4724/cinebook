@@ -80,7 +80,7 @@ class MovieRepository:
                 ScreenModel.theatre_id == theatre_id,
                 MovieModel.is_deleted == False,
                 ShowModel.is_deleted == False,
-                ShowModel.start_time > datetime.now(timezone.utc),
+                ShowModel.start_time > datetime.now(timezone.utc).replace(tzinfo=None),
             )
             .distinct()
             .offset(skip)

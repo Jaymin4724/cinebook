@@ -6,6 +6,7 @@ from datetime import datetime
 from sqlalchemy.orm import selectinload, joinedload
 from app.services.seat_layout_service import SeatLayoutService
 from fastapi import HTTPException, status
+from uuid import UUID
 
 
 class ShowRepository:
@@ -76,7 +77,7 @@ class ShowRepository:
         return new_show
 
     async def get_shows_repo(
-        self, theatre_id: str, movie_id: str, page: int = 1, size: int = 10
+        self, theatre_id: UUID, movie_id: str, page: int = 1, size: int = 10
     ):
         """Fetch shows for a movie in a theatre with pagination."""
         offset = (page - 1) * size
