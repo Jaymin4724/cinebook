@@ -20,6 +20,38 @@ class ScreenRepository:
 
         return new_screen
 
+    async def get_all_screens_by_user_repo(self, user_id: str, page: int, size: int):
+        """Fetch paginated list of screens with theatre and layout details."""
+
+        skip = (page - 1) * size
+
+        query = (
+            select(
+                ScreenModel.id,
+                ScreenModel.name,
+                ScreenModel.theatre_id,
+                ScreenModel.layout_id,
+                TheatreModel.name.label("theatre_name"),
+                LayoutModel.name.label("layout_name"),
+            )
+            .join(TheatreModel, ScreenModel.theatre_id == TheatreModel.id)
+            .join(LayoutModel, ScreenModel.layout_id == LayoutModel.id)
+            .join(
+                TheatreOperatorMapModel,
+                TheatreOperatorMapModel.theatre_id == TheatreModel.id,
+            )
+            .where(
+                ScreenModel.is_active == True,
+                TheatreModel.is_active == True,
+                TheatreOperatorMapModel.user_id == user_id,
+            )
+            .offset(skip)
+            .limit(size)
+        )
+
+        result = await self.db.execute(query)
+        return result.all()
+
     async def get_layout_by_screen_repo(self, screen_id: str):
         """Fetch layout for a screen if active."""
         query = (
@@ -79,4 +111,4 @@ class ScreenRepository:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Screen not found"
             )
 
-        await screen_found.soft_delete(db=self.db)
+        return await screen_found.soft_delete(db=self.db)

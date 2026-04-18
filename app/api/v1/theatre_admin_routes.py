@@ -82,6 +82,23 @@ async def get_my_theatres_route(
     )
 
 
+@theatre_admin_router.get(
+    "/my-screens",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("read-my-screens"))],
+)
+async def get_my_screens_route(
+    theatre_admin_service: TheatreAdminServiceDep,
+    user_id: GetUserDep,
+    pagination: Annotated[PaginationSchema, Query()],
+):
+    """Fetch all screens for logged-in theatre admin."""
+    return await theatre_admin_service.get_my_screens_service(
+        user_id=user_id, page=pagination.page, size=pagination.size
+    )
+
+
 @theatre_admin_router.delete(
     "/screen/delete/{screen_id}",
     status_code=status.HTTP_200_OK,

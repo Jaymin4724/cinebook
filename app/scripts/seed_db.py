@@ -85,6 +85,7 @@ async def seed_permissions(db):
         "create-layout",
         "create-screen",
         "read-my-theatres",
+        "read-my-screens",
         "delete-screen",
         "create-show",
         "delete-show",
@@ -133,6 +134,7 @@ async def seed_role_permissions(db, roles, permissions):
         "create-layout",
         "create-screen",
         "read-my-theatres",
+        "read-my-screens",
         "delete-screen",
         "create-show",
         "delete-show",
@@ -187,9 +189,7 @@ async def insert_role_permissions_if_missing(db, role_id, permission_ids):
 
     existing_ids_list = result.scalars().all()
 
-    existing_ids = set()
-    for eid in existing_ids_list:
-        existing_ids.add(eid)
+    existing_ids = set(existing_ids_list)
 
     print(f"[ROLE-PERM] Existing mappings count → {len(existing_ids)}")
 
@@ -226,27 +226,18 @@ async def seed_users(db, roles):
         ("jaymin4724@gmail.com", True, roles["theatre_admin"].id),
     ]
 
-    emails = []
-    for user in users_data:
-        emails.append(user[0])
+    emails = [user[0] for user in users_data]
 
     result = await db.execute(select(UserModel).where(UserModel.email.in_(emails)))
-
     existing_users_list = result.scalars().all()
 
-    existing_users = {}
-    for user in existing_users_list:
-        existing_users[user.email] = user
+    existing_users = {user.email: user for user in existing_users_list}
 
     print(f"[USERS] Existing users count → {len(existing_users)}")
 
     new_users = []
 
-    for user in users_data:
-        email = user[0]
-        is_active = user[1]
-        role_id = user[2]
-
+    for email, is_active, role_id in users_data:
         if email not in existing_users:
             print(f"[USERS] Missing → {email}")
             new_users.append(
@@ -255,7 +246,7 @@ async def seed_users(db, roles):
         else:
             print(f"[USERS] Already exists → {email}")
 
-    if len(new_users) > 0:
+    if new_users:
         print(f"[USERS] Inserting {len(new_users)} users")
         db.add_all(new_users)
         await db.flush()
@@ -264,14 +255,9 @@ async def seed_users(db, roles):
         print("[USERS] No new users to insert")
 
     result = await db.execute(select(UserModel).where(UserModel.email.in_(emails)))
-
     users_list = result.scalars().all()
 
-    users_map = {}
-    for user in users_list:
-        users_map[user.email] = user
-
-    return users_map
+    return {user.email: user for user in users_list}
 
 
 # ========== USER DETAILS ==========
@@ -280,36 +266,22 @@ async def seed_users(db, roles):
 async def seed_user_details(db, users):
     print("\n========== SEEDING USER DETAILS ==========")
 
-    user_ids = []
-    for user in users.values():
-        user_ids.append(user.id)
+    user_ids = [user.id for user in users.values()]
 
     result = await db.execute(
         select(UserDetailModel.user_id).where(UserDetailModel.user_id.in_(user_ids))
     )
 
-    existing_ids_list = result.scalars().all()
-
-    existing_ids = set()
-    for uid in existing_ids_list:
-        existing_ids.add(uid)
+    existing_ids = set(result.scalars().all())
 
     print(f"[USER-DETAILS] Existing count → {len(existing_ids)}")
 
-    missing_ids = []
-    for uid in user_ids:
-        if uid not in existing_ids:
-            print(f"[USER-DETAILS] Missing → user_id={uid}")
-            missing_ids.append(uid)
-        else:
-            print(f"[USER-DETAILS] Already exists → user_id={uid}")
+    missing_ids = [uid for uid in user_ids if uid not in existing_ids]
 
-    if len(missing_ids) > 0:
+    if missing_ids:
         print(f"[USER-DETAILS] Inserting {len(missing_ids)} records")
 
-        new_details = []
-        for uid in missing_ids:
-            new_details.append(UserDetailModel(user_id=uid))
+        new_details = [UserDetailModel(user_id=uid) for uid in missing_ids]
 
         db.add_all(new_details)
         print("[USER-DETAILS] Insert completed")
