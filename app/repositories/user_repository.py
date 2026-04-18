@@ -75,6 +75,7 @@ class UserRepository:
         result = await self.db.scalars(
             select(UserModel)
             .where(UserModel.is_active == True)
+            .options(selectinload(UserModel.role), selectinload(UserModel.user_detail))
             .offset(skip)
             .limit(size)
         )
@@ -97,16 +98,9 @@ class UserRepository:
 
         await user_found.soft_delete(db=self.db)
 
-    async def get_user_by_id(
-        self,
-        user_id: str
-    ):
+    async def get_user_by_id(self, user_id: str):
 
-        query = select(
-            UserModel
-        ).where(
-            UserModel.id == user_id
-        )
+        query = select(UserModel).where(UserModel.id == user_id)
 
         result = await self.db.execute(query)
 
@@ -114,8 +108,7 @@ class UserRepository:
 
         if not user_found:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
-        
+
         return user_found

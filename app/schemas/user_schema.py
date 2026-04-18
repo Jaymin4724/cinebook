@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_serializer
 from uuid import UUID
 from enum import Enum
 
@@ -27,13 +27,53 @@ class CreateUserSchema(BaseUserAuth):
     role: Roles
 
 
-class UserBase(BaseModel):
+class RoleOutSchema(BaseModel):
+    role: str
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserDetailOutSchema(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    mobile_no: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserOutSchema(BaseModel):
+    id: UUID
     email: EmailStr
     is_active: bool = True
-    role_id: UUID
-
-
-class UserOutSchema(UserBase):
-    id: UUID
+    role: RoleOutSchema
     google_id: str | None = None
+    user_detail: UserDetailOutSchema | None = None
     model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("role")
+    def serialize_role(self, role):
+        return role.role if role else None
+
+    @staticmethod
+    def remove_none(data: dict):
+        cleaned_data = {}
+
+        for key, value in data.items():
+            if value is not None:
+                cleaned_data[key] = value
+
+        return cleaned_data
+
+    @field_serializer("user_detail")
+    def serialize_user_detail(self, detail):
+        if not detail:
+            return None
+
+        data = self.remove_none(
+            {
+                "first_name": detail.first_name,
+                "last_name": detail.last_name,
+                "mobile_no": detail.mobile_no,
+            }
+        )
+
+        return data if data else None

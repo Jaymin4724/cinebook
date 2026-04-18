@@ -122,7 +122,6 @@ class AdminService:
             )
 
         movie_data = MovieOutSchema.model_validate(movie).model_dump(mode="json")
-        print(movie_data)
         return create_response(data=movie_data, message="Movie created successfully")
 
     async def get_all_users_service(self, page: int = 1, size: int = 10):

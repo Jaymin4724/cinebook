@@ -188,7 +188,6 @@ class TestUser:
 
     async def test_get_shows_success(self, client):
         ids = await build_full_chain(client)
-        print(ids)
         client.headers.pop("Authorization", None)
 
         response = await client.get(
