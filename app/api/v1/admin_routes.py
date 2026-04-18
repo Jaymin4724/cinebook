@@ -5,6 +5,7 @@ from app.schemas.user_schema import CreateUserSchema
 from app.schemas.standard_schema import ResponseSchema
 from app.schemas.theatre_schema import CreateTheatreSchema
 from app.schemas.pagination_schema import PaginationSchema
+from app.schemas.movie_schema import CreateMovieRequest
 
 from typing import Annotated
 
@@ -47,10 +48,10 @@ async def create_theatre_route(
     dependencies=[Depends(permission_required("create-movie"))],
 )
 async def create_movie_route(
-    imdb_id: Annotated[str, Body(embed=True)], admin_service: AdminServiceDep
+    movie_payload: CreateMovieRequest, admin_service: AdminServiceDep
 ):
     """Create a new movie using IMDB ID."""
-    return await admin_service.create_new_movie_service(imdb_id=imdb_id)
+    return await admin_service.create_new_movie_service(movie_payload)
 
 
 @admin_router.get(

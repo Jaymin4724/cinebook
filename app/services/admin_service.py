@@ -86,25 +86,55 @@ class AdminService:
             data=theatre_data, message="Theatre created successfully"
         )
 
-    async def create_new_movie_service(self, imdb_id: str) -> ResponseSchema:
+    async def create_new_movie_service(self, movie_payload) -> ResponseSchema:
         """Fetch movie data from OMDB and create new movie."""
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"https://www.omdbapi.com/?i={imdb_id}&apikey={settings.OMDB_API_KEY}"
+
+        # ---------- INPUT VALIDATION ----------
+        if not movie_payload.imdb_id and not movie_payload.title:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Provide either imdb_id or title",
             )
+
+        if movie_payload.imdb_id and movie_payload.title:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Provide only one of imdb_id or title",
+            )
+
+        # ---------- BUILD OMDB PARAMS ----------
+        params = {"apikey": settings.OMDB_API_KEY}
+
+        if movie_payload.imdb_id:
+            params["i"] = movie_payload.imdb_id
+        else:
+            params["t"] = movie_payload.title
+
+        # ---------- FETCH FROM OMDB ----------
+        async with httpx.AsyncClient() as client:
+            response = await client.get("https://www.omdbapi.com/", params=params)
+
+            if response.status_code != status.HTTP_200_OK:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="Failed to fetch movie data",
+                )
+
             data = response.json()
 
         if data.get("Response") == "False":
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=data.get("Error", "Movie not found"),
             )
 
+        # ---------- DB OPERATIONS ----------
         async with self.db.begin():
             self.movie_repo.db = self.db
 
-            movie_found = await self.movie_repo.get_movie_by_imdb_id(
-                imdb_id=data.get("imdbID")
-            )
+            imdb_id = data.get("imdbID")
+
+            movie_found = await self.movie_repo.get_movie_by_imdb_id(imdb_id)
 
             if movie_found:
                 raise HTTPException(
@@ -118,10 +148,12 @@ class AdminService:
                 description=data.get("Plot"),
                 genre=data.get("Genre"),
                 rating=float(data.get("imdbRating")),
-                imdb_id=data.get("imdbID"),
+                imdb_id=imdb_id,
             )
 
+        # ---------- RESPONSE ----------
         movie_data = MovieOutSchema.model_validate(movie).model_dump(mode="json")
+
         return create_response(data=movie_data, message="Movie created successfully")
 
     async def get_all_users_service(self, page: int = 1, size: int = 10):
