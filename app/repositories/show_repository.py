@@ -134,7 +134,7 @@ class ShowRepository:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Show not found"
             )
 
-        await show_found.soft_delete(db=self.db)
+        return await show_found.soft_delete(db=self.db)
 
     async def get_show_end_time(self, show_id: str):
 

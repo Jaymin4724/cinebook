@@ -6,7 +6,10 @@ from app.repositories.theatre_repository import TheatreRepository
 from app.repositories.movie_repository import MovieRepository
 from app.repositories.show_repository import ShowRepository
 from app.schemas.standard_schema import ResponseSchema, create_response
-from app.schemas.screen_schema import ScreenOutSchema
+from app.schemas.screen_schema import ScreenOutSchema, ScreenWithDetailsSchema
+from app.schemas.theatre_schema import TheatreOutSchema
+from app.schemas.show_schema import ShowOutSchema
+
 from fastapi import HTTPException, status
 from app.utils.polish_seat_layout import polish_seat_layout
 from app.utils.show_create_validation import (
@@ -72,8 +75,10 @@ class TheatreAdminService:
             new_layout = await self.layout_repo.create_layout_repository(
                 name=layout_name, layout=new_layout, theatre_id=theatre_id
             )
+
         return create_response(
-            data={"id": new_layout.id}, message="New layout created successfully"
+            data={"id": new_layout.id, "layout": new_layout.layout},
+            message="New layout created successfully",
         )
 
     async def create_screen_service(
@@ -167,8 +172,44 @@ class TheatreAdminService:
                 category_pricing=category_price,
             )
 
+            show_data = ShowOutSchema.model_validate(new_show).model_dump(mode="json")
+        return create_response(data=show_data, message="Show created successfully")
+
+    async def get_my_theatres_service(self, user_id: str, page: int, size: int):
+        """Fetch all theatres mapped to the given user."""
+        async with self.db.begin():
+            self.theatre_repo.db = self.db
+
+            theatres = await self.theatre_repo.get_all_theatres_by_user_repo(
+                user_id=user_id, page=page, size=size
+            )
+
+            theatres_data = [
+                TheatreOutSchema.model_validate(t).model_dump(mode="json")
+                for t in theatres
+            ]
+
         return create_response(
-            data={"id": new_show.id}, message="Show created successfully"
+            data=theatres_data, message="Theatres fetched successfully"
+        )
+
+    async def get_my_screens_service(self, user_id: str, page: int, size: int):
+        """Fetch all screens mapped to the given user."""
+
+        async with self.db.begin():
+            self.screen_repo.db = self.db
+
+            screens = await self.screen_repo.get_all_screens_by_user_repo(
+                user_id=user_id, page=page, size=size
+            )
+
+            screens_data = [
+                ScreenWithDetailsSchema.model_validate(screen).model_dump(mode="json")
+                for screen in screens
+            ]
+
+        return create_response(
+            data=screens_data, message="Screens fetched successfully"
         )
 
     async def delete_screen_service(self, screen_id: str, user_id: str):
@@ -176,17 +217,24 @@ class TheatreAdminService:
         async with self.db.begin():
             self.screen_repo.db = self.db
 
-            await self.screen_repo.delete_screen_repo(
+            deleted_screen = await self.screen_repo.delete_screen_repo(
                 screen_id=screen_id, user_id=user_id
             )
+            screen_data = ScreenOutSchema.model_validate(deleted_screen).model_dump(
+                mode="json"
+            )
 
-        return create_response(message="Screen deleted successfully")
+        return create_response(data=screen_data, message="Screen deleted successfully")
 
     async def delete_show_service(self, show_id: str, user_id: str):
         """Delete show by ID after validation."""
         async with self.db.begin():
             self.show_repo.db = self.db
 
-            await self.show_repo.delete_show_repo(show_id=show_id, user_id=user_id)
-
-        return create_response(message="Show deleted successfully")
+            deleted_show = await self.show_repo.delete_show_repo(
+                show_id=show_id, user_id=user_id
+            )
+            show_data = ShowOutSchema.model_validate(deleted_show).model_dump(
+                mode="json"
+            )
+        return create_response(data=show_data, message="Show deleted successfully")

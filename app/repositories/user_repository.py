@@ -96,7 +96,7 @@ class UserRepository:
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
 
-        await user_found.soft_delete(db=self.db)
+        return await user_found.soft_delete(db=self.db)
 
     async def get_user_by_id(self, user_id: str):
 
