@@ -84,6 +84,7 @@ async def seed_permissions(db):
         "delete-movie",
         "create-layout",
         "create-screen",
+        "read-my-theatres",
         "delete-screen",
         "create-show",
         "delete-show",
@@ -127,9 +128,11 @@ async def seed_permissions(db):
 async def seed_role_permissions(db, roles, permissions):
     print("\n========== SEEDING ROLE-PERMISSION MAPPING ==========")
 
+    # THEATRE ADMIN
     theatre_admin_permissions = [
         "create-layout",
         "create-screen",
+        "read-my-theatres",
         "delete-screen",
         "create-show",
         "delete-show",
@@ -151,12 +154,26 @@ async def seed_role_permissions(db, roles, permissions):
     print(f"[ROLE-PERM] admin ID → {admin_id}")
 
     all_permission_ids = []
-    for perm in permissions:
-        pid = permissions[perm].id
-        print(f"[ROLE-PERM] admin gets → {perm} (id={pid})")
+    for perm_name, perm_obj in permissions.items():
+        pid = perm_obj.id
+        print(f"[ROLE-PERM] admin gets → {perm_name} (id={pid})")
         all_permission_ids.append(pid)
 
     await insert_role_permissions_if_missing(db, admin_id, all_permission_ids)
+
+    # USER → BASIC
+    user_id = roles["user"].id
+    print(f"[ROLE-PERM] user ID → {user_id}")
+
+    user_permissions = ["read-movies"]
+
+    user_permission_ids = []
+    for perm in user_permissions:
+        pid = permissions[perm].id
+        print(f"[ROLE-PERM] user gets → {perm} (id={pid})")
+        user_permission_ids.append(pid)
+
+    await insert_role_permissions_if_missing(db, user_id, user_permission_ids)
 
 
 async def insert_role_permissions_if_missing(db, role_id, permission_ids):

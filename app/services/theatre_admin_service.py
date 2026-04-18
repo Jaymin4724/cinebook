@@ -7,6 +7,8 @@ from app.repositories.movie_repository import MovieRepository
 from app.repositories.show_repository import ShowRepository
 from app.schemas.standard_schema import ResponseSchema, create_response
 from app.schemas.screen_schema import ScreenOutSchema
+from app.schemas.theatre_schema import TheatreOutSchema
+
 from fastapi import HTTPException, status
 from app.utils.polish_seat_layout import polish_seat_layout
 from app.utils.show_create_validation import (
@@ -169,6 +171,24 @@ class TheatreAdminService:
 
         return create_response(
             data={"id": new_show.id}, message="Show created successfully"
+        )
+
+    async def get_my_theatres_service(self, user_id: str, page: int, size: int):
+        """Fetch all theatres mapped to the given user."""
+        async with self.db.begin():
+            self.theatre_repo.db = self.db
+
+            theatres = await self.theatre_repo.get_all_theatres_by_user_repo(
+                user_id=user_id, page=page, size=size
+            )
+
+            theatres_data = [
+                TheatreOutSchema.model_validate(t).model_dump(mode="json")
+                for t in theatres
+            ]
+
+        return create_response(
+            data=theatres_data, message="Theatres fetched successfully"
         )
 
     async def delete_screen_service(self, screen_id: str, user_id: str):

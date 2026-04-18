@@ -1,10 +1,11 @@
-from fastapi import APIRouter, status, Depends, Body
+from fastapi import APIRouter, status, Depends, Body, Query
 from app.api.dependencies import permission_required
 
 from app.schemas.standard_schema import ResponseSchema
 from app.schemas.layout_schema import CreateLayoutSchema
 from app.schemas.screen_schema import CreateScreenSchema
 from app.schemas.show_schema import CreateShowSchema
+from app.schemas.pagination_schema import PaginationSchema
 
 from app.api.dependencies import TheatreAdminServiceDep, GetUserDep
 
@@ -61,6 +62,23 @@ async def create_show_route(
     """Create a new show for a screen."""
     return await theatre_admin_service.create_show_service(
         show_body=show_body.model_dump(), user_id=user_id
+    )
+
+
+@theatre_admin_router.get(
+    "/my-theatres",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("read-my-theatres"))],
+)
+async def get_my_theatres_route(
+    theatre_admin_service: TheatreAdminServiceDep,
+    user_id: GetUserDep,
+    pagination: Annotated[PaginationSchema, Query()],
+):
+    """Fetch all theatres for logged-in theatre admin."""
+    return await theatre_admin_service.get_my_theatres_service(
+        user_id=user_id, page=pagination.page, size=pagination.size
     )
 
 
