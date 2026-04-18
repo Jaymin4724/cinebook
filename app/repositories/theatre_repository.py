@@ -103,4 +103,4 @@ class TheatreRepository:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Theatre not found"
             )
 
-        await theatre_found.soft_delete(db=self.db)
+        return await theatre_found.soft_delete(db=self.db)

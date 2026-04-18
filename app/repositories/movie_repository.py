@@ -105,4 +105,4 @@ class MovieRepository:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found"
             )
 
-        await movie_found.soft_delete(db=self.db)
+        return await movie_found.soft_delete(db=self.db)

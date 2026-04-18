@@ -31,3 +31,4 @@ class MovieModel(Base):
         """Mark movie as deleted."""
         self.is_deleted = True
         db.add(self)
+        return self

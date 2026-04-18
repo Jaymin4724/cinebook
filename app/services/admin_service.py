@@ -197,15 +197,24 @@ class AdminService:
         async with self.db.begin():
             self.theatre_repo.db = self.db
 
-            await self.theatre_repo.delete_theatre_repo(theatre_id=theatre_id)
+            theatre_details = await self.theatre_repo.delete_theatre_repo(
+                theatre_id=theatre_id
+            )
 
-        return create_response(message="Theatre deleted successfully")
+            theatre_data = TheatreOutSchema.model_validate(theatre_details).model_dump(
+                mode="json"
+            )
+        return create_response(
+            data=theatre_data, message="Theatre deleted successfully"
+        )
 
     async def delete_movie_service(self, movie_id: str):
         """Delete movie by ID."""
         async with self.db.begin():
             self.movie_repo.db = self.db
 
-            await self.movie_repo.delete_movie_repo(movie_id=movie_id)
-
-        return create_response(message="Movie deleted successfully")
+            movie_details = await self.movie_repo.delete_movie_repo(movie_id=movie_id)
+            movie_data = MovieOutSchema.model_validate(movie_details).model_dump(
+                mode="json"
+            )
+        return create_response(data=movie_data, message="Movie deleted successfully")
