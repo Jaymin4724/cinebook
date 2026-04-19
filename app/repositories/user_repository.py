@@ -50,7 +50,15 @@ class UserRepository:
         self.db.add(new_user_details)
         await self.db.flush()
 
-        return new_user
+        result = await self.db.execute(
+            select(UserModel)
+            .where(UserModel.id == new_user.id)
+            .options(selectinload(UserModel.role), selectinload(UserModel.user_detail))
+        )
+
+        user_with_relations = result.scalar_one()
+
+        return user_with_relations
 
     async def get_user_id_by_email_and_role_repo(
         self, email: str, role: str
