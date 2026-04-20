@@ -68,7 +68,7 @@ class TheatreAdminService:
                     status_code=status.HTTP_404_NOT_FOUND, detail="Theatre not found"
                 )
 
-            new_layout = polish_seat_layout(layout=layout_format)
+            new_layout = polish_seat_layout(layout_format)
 
             if new_layout is None:
                 raise HTTPException(

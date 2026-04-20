@@ -16,12 +16,11 @@ def create_new_layout(
 
 def polish_seat_layout(data_input: dict) -> dict | None:
     """Validate and format raw seat layout data with unique seat numbering."""
-    # Handle the nested structure (input['layout']['layout'])
-    outer_layout = data_input.get("layout", {})
-    metadata = outer_layout.get("metadata")
-    layout_grid = outer_layout.get("layout")
+    # Corrected: 'layout' is the list of rows, 'metadata' is a sibling key
+    layout_grid = data_input.get("layout")
+    metadata = data_input.get("metadata")
 
-    if not metadata or not layout_grid:
+    if not metadata or not isinstance(layout_grid, list):
         return None
 
     rows = metadata.get("grid_rows")
@@ -34,20 +33,26 @@ def polish_seat_layout(data_input: dict) -> dict | None:
     category_set = set()
     seat_mapping = {}
     total_seat = 0
-    row_idx_counter = 0  # Counter for theater row labels (A, B, C...)
+    row_idx_counter = 0
 
     for i in range(rows):
         row_list = []
         column_seat_counter = 0
         row_has_seats = False
 
-        # Generate Row Label (e.g., 0 -> A, 1 -> B, 26 -> AA)
+        # Generate Row Label (e.g., 0 -> A, 1 -> B)
         letter_idx = row_idx_counter % 26
         multiplier = (row_idx_counter // 26) + 1
         row_label = chr(65 + letter_idx) * multiplier
 
         for j in range(columns):
-            grid = layout_grid[i][j]
+            # Safety check for index existence
+            try:
+                grid = layout_grid[i][j]
+            except (IndexError, TypeError):
+                row_list.append(None)
+                continue
+
             if not grid:
                 row_list.append(None)
                 continue
@@ -61,7 +66,6 @@ def polish_seat_layout(data_input: dict) -> dict | None:
                 seat_number = f"{row_label}{column_seat_counter}"
 
                 total_seat += 1
-                # Map coordinates [row_index, col_index] to unique seat label
                 seat_mapping[seat_number] = [i, j]
 
                 cat_lower = category.lower() if category else "standard"
@@ -75,12 +79,10 @@ def polish_seat_layout(data_input: dict) -> dict | None:
                     }
                 )
             else:
-                # Handle walls or non-seat grid types
                 row_list.append(
                     {"grid_type": grid_type, "seat_number": None, "category": None}
                 )
 
-        # Only increment the letter counter if this row actually contained seats
         if row_has_seats:
             row_idx_counter += 1
 
