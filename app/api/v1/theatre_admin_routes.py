@@ -127,3 +127,20 @@ async def delete_show_route(
     return await theatre_admin_service.delete_show_service(
         show_id=show_id, user_id=user_id
     )
+
+
+@theatre_admin_router.post(
+    "/verify-ticket",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("verify-ticket"))]
+)
+async def verify_ticket_route(
+    ticket_hash: Annotated[str,Body(embed=True)],
+    user_id: GetUserDep,
+    theatre_admin_service: TheatreAdminServiceDep
+):
+    return await theatre_admin_service.verify_ticket_service(
+        ticket_hash=ticket_hash,
+        user_id=user_id
+    )

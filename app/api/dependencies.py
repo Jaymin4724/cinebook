@@ -117,6 +117,7 @@ def get_theatre_admin_service(
     theatre_repo: TheatreRepoDep,
     movie_repo: MovieRepoDep,
     show_repo: ShowRepoDep,
+    booked_ticket_repo: BookingTicketRepositoryDep,
 ) -> TheatreAdminService:
     """Create theatre admin service with required dependencies."""
     return TheatreAdminService(
@@ -127,6 +128,7 @@ def get_theatre_admin_service(
         theatre_repo=theatre_repo,
         movie_repo=movie_repo,
         show_repo=show_repo,
+        booked_ticket_repo=booked_ticket_repo
     )
 
 

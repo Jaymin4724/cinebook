@@ -14,8 +14,8 @@ class ScreenModel(Base):
     __tablename__ = "screens"
 
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    theatre_id: Mapped[UUID] = mapped_column(ForeignKey("theatres.id"), index=False)
-    layout_id: Mapped[UUID] = mapped_column(ForeignKey("layouts.id"), index=False)
+    theatre_id: Mapped[UUID] = mapped_column(ForeignKey("theatres.id"), index=True)
+    layout_id: Mapped[UUID] = mapped_column(ForeignKey("layouts.id"), index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     theatre: Mapped["TheatreModel"] = relationship(back_populates="screen_list")

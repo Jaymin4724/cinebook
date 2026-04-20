@@ -12,6 +12,7 @@ dependencies = [
     "fakeredis>=2.34.1",
     "fastapi-mail>=1.6.2",
     "fastapi[standard]>=0.135.2",
+    "flake8>=7.3.0",
     "httpx>=0.28.1",
     "jose>=1.0.0",
     "pydantic>=2.12.5",

@@ -5,6 +5,7 @@ from app.repositories.screen_repository import ScreenRepository
 from app.repositories.theatre_repository import TheatreRepository
 from app.repositories.movie_repository import MovieRepository
 from app.repositories.show_repository import ShowRepository
+from app.repositories.booked_ticket_repository import BookingTicketRepository
 from app.schemas.standard_schema import ResponseSchema, create_response
 from app.schemas.screen_schema import ScreenOutSchema, ScreenWithDetailsSchema
 from app.schemas.theatre_schema import TheatreOutSchema
@@ -18,7 +19,8 @@ from app.utils.show_create_validation import (
     validate_movie_and_return_time,
     validate_show_overlap,
 )
-from datetime import timezone, timedelta
+from app.utils.helper import decrypt_data
+from datetime import timezone, timedelta, datetime
 
 
 class TheatreAdminService:
@@ -33,6 +35,7 @@ class TheatreAdminService:
         theatre_repo: TheatreRepository,
         movie_repo: MovieRepository,
         show_repo: ShowRepository,
+        booked_ticket_repo: BookingTicketRepository
     ):
 
         self.db = db
@@ -42,6 +45,7 @@ class TheatreAdminService:
         self.theatre_repo = theatre_repo
         self.movie_repo = movie_repo
         self.show_repo = show_repo
+        self.booked_ticket_repo = booked_ticket_repo
 
     async def create_layout_service(
         self, layout_body: dict, user_id: str
@@ -234,7 +238,39 @@ class TheatreAdminService:
             deleted_show = await self.show_repo.delete_show_repo(
                 show_id=show_id, user_id=user_id
             )
+            
             show_data = ShowOutSchema.model_validate(deleted_show).model_dump(
                 mode="json"
             )
         return create_response(data=show_data, message="Show deleted successfully")
+
+
+    async def verify_ticket_service(
+        self,
+        user_id: str,
+        ticket_hash: str
+    ):
+
+        ticket_hash = ticket_hash.encode()
+
+        booking_id = await decrypt_data(encrypted_data=ticket_hash)
+
+        async with self.db.begin():
+            self.booked_ticket_repo.db = self.db
+
+            await self.booked_ticket_repo.validate_ticket_hash(
+                booking_id=booking_id
+            )
+
+            await self.booked_ticket_repo.validate_ticket_and_theatre(
+                booking_id=booking_id,
+                user_id=user_id
+            )
+
+            await self.booked_ticket_repo.update_ticket_status(
+                booking_id=booking_id
+            )
+        
+        return create_response(
+            message="Ticket verified successfully"
+        )
