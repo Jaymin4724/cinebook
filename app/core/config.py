@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     ENCRYPTION_PASSWORD: str
     ENCRYPTION_STATIC_SALT: str
 
+    ENV : str = "TESTING"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

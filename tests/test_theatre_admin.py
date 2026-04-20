@@ -214,7 +214,7 @@ class TestTheatreAdmin:
         screen_id = create_resp.json()["data"]["id"]
 
         response = await client.delete(
-            "/api/v1/theatre-admin/screen/delete", params={"screen_id": screen_id}
+            f"/api/v1/theatre-admin/screen/delete/{screen_id}"
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -236,9 +236,7 @@ class TestTheatreAdmin:
         )
         show_id = create_resp.json()["data"]["id"]
 
-        response = await client.delete(
-            "/api/v1/theatre-admin/show/delete", params={"show_id": show_id}
-        )
+        response = await client.delete(f"/api/v1/theatre-admin/show/delete/{show_id}")
 
         assert response.status_code == status.HTTP_200_OK
         body = response.json()

@@ -50,7 +50,15 @@ class UserRepository:
         self.db.add(new_user_details)
         await self.db.flush()
 
-        return new_user
+        result = await self.db.execute(
+            select(UserModel)
+            .where(UserModel.id == new_user.id)
+            .options(selectinload(UserModel.role), selectinload(UserModel.user_detail))
+        )
+
+        user_with_relations = result.scalar_one()
+
+        return user_with_relations
 
     async def get_user_id_by_email_and_role_repo(
         self, email: str, role: str
@@ -75,6 +83,7 @@ class UserRepository:
         result = await self.db.scalars(
             select(UserModel)
             .where(UserModel.is_active == True)
+            .options(selectinload(UserModel.role), selectinload(UserModel.user_detail))
             .offset(skip)
             .limit(size)
         )
@@ -95,18 +104,11 @@ class UserRepository:
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
 
-        await user_found.soft_delete(db=self.db)
+        return await user_found.soft_delete(db=self.db)
 
-    async def get_user_by_id(
-        self,
-        user_id: str
-    ):
+    async def get_user_by_id(self, user_id: str):
 
-        query = select(
-            UserModel
-        ).where(
-            UserModel.id == user_id
-        )
+        query = select(UserModel).where(UserModel.id == user_id)
 
         result = await self.db.execute(query)
 
@@ -114,8 +116,7 @@ class UserRepository:
 
         if not user_found:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
-        
+
         return user_found

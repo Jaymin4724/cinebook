@@ -46,7 +46,7 @@ class AuthService:
 
         await self.email_service.send_otp_email(email_to=email, otp=otp)
 
-        return create_response(message="OTP sent to your email")
+        return create_response(data={"email": email},message="OTP sent to your email")
 
     async def auth_signin_service(
         self,

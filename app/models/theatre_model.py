@@ -27,3 +27,4 @@ class TheatreModel(Base):
         """Mark theatre as deleted."""
         self.is_active = False
         db.add(self)
+        return self

@@ -5,6 +5,7 @@ from app.schemas.user_schema import CreateUserSchema
 from app.schemas.standard_schema import ResponseSchema
 from app.schemas.theatre_schema import CreateTheatreSchema
 from app.schemas.pagination_schema import PaginationSchema
+from app.schemas.movie_schema import CreateMovieRequest
 
 from typing import Annotated
 
@@ -47,10 +48,10 @@ async def create_theatre_route(
     dependencies=[Depends(permission_required("create-movie"))],
 )
 async def create_movie_route(
-    imdb_id: Annotated[str, Body(embed=True)], admin_service: AdminServiceDep
+    movie_payload: CreateMovieRequest, admin_service: AdminServiceDep
 ):
     """Create a new movie using IMDB ID."""
-    return await admin_service.create_new_movie_service(imdb_id=imdb_id)
+    return await admin_service.create_new_movie_service(movie_payload)
 
 
 @admin_router.get(
@@ -99,22 +100,22 @@ async def get_all_movies_route(
 
 
 @admin_router.delete(
-    "/theatre/delete",
+    "/theatre/delete/{theatre_id}",
     status_code=status.HTTP_200_OK,
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-theatre"))],
 )
-async def delete_theatre_router(theatre_id: Annotated[str,Body(embed=True)], admin_service: AdminServiceDep):
+async def delete_theatre_router(theatre_id: str, admin_service: AdminServiceDep):
     """Delete theatre by ID."""
     return await admin_service.delete_theatre_service(theatre_id=theatre_id)
 
 
 @admin_router.delete(
-    "/movie/delete",
+    "/movie/delete/{movie_id}",
     status_code=status.HTTP_200_OK,
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-movie"))],
 )
-async def delete_movie_router(movie_id: Annotated[str,Body(embed=True)], admin_services: AdminServiceDep):
+async def delete_movie_router(movie_id: str, admin_services: AdminServiceDep):
     """Delete movie by ID."""
     return await admin_services.delete_movie_service(movie_id=movie_id)

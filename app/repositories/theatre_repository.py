@@ -65,6 +65,27 @@ class TheatreRepository:
         )
         return result.all()
 
+    async def get_all_theatres_by_user_repo(self, user_id: str, page: int, size: int):
+        """Fetch paginated list of active theatres for a specific user."""
+        skip = (page - 1) * size
+
+        query = (
+            select(TheatreModel)
+            .join(
+                TheatreOperatorMapModel,
+                TheatreOperatorMapModel.theatre_id == TheatreModel.id,
+            )
+            .where(
+                TheatreOperatorMapModel.user_id == user_id,
+                TheatreModel.is_active == True,
+            )
+            .offset(skip)
+            .limit(size)
+        )
+
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
     async def get_theatres_by_movie_repo(
         self, movie_id: str, page: int, size: int
     ) -> list[TheatreModel]:
@@ -103,4 +124,4 @@ class TheatreRepository:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Theatre not found"
             )
 
-        await theatre_found.soft_delete(db=self.db)
+        return await theatre_found.soft_delete(db=self.db)

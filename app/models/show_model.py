@@ -31,3 +31,4 @@ class ShowModel(Base):
     async def soft_delete(self, db: AsyncSession):
         self.is_deleted = True
         db.add(self)
+        return self

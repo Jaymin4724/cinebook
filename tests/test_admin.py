@@ -128,9 +128,7 @@ class TestAdmin:
         )
         theatre_id = create_resp.json()["data"]["id"]
 
-        response = await client.delete(
-            "/api/v1/admin/theatre/delete", params={"theatre_id": theatre_id}
-        )
+        response = await client.delete(f"/api/v1/admin/theatre/delete/{theatre_id}")
 
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
@@ -149,9 +147,7 @@ class TestAdmin:
             )
         movie_id = create_resp.json()["data"]["id"]
 
-        response = await client.delete(
-            "/api/v1/admin/movie/delete", params={"movie_id": movie_id}
-        )
+        response = await client.delete(f"/api/v1/admin/movie/delete/{movie_id}")
 
         assert response.status_code == status.HTTP_200_OK
         body = response.json()
