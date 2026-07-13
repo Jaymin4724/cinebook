@@ -4,6 +4,13 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from app.models import ShowModel, LayoutModel, ScreenModel, BookedSeatMapModel
 
+# How long a generated show layout stays cached in Redis. Intentionally
+# longer than SEAT_LOCK_TTL_SECONDS (seat_lock_script): the cached layout
+# only stores Available/Booked, locks are overlaid fresh on every read, and
+# bookings/cancellations update the cache in place — so a long TTL is safe
+# and just avoids regenerating the grid from Postgres on every request.
+LAYOUT_CACHE_TTL_SECONDS = 6000
+
 
 class SeatLayoutService:
     """Handle seat layout generation and updates for shows."""
@@ -52,7 +59,9 @@ class SeatLayoutService:
             pipe.json().set(
                 name=f"show_seat_layout_{show_id}", path="$", obj=updated_layout
             )
-            pipe.expire(name=f"show_seat_layout_{show_id}", time=6000)
+            pipe.expire(
+                name=f"show_seat_layout_{show_id}", time=LAYOUT_CACHE_TTL_SECONDS
+            )
             await pipe.execute()
 
         return updated_layout
@@ -101,7 +110,8 @@ class SeatLayoutService:
         for row in range(rows):
             for col in range(columns):
                 cell = layout[row][col]
-                if cell.get("grid_type") == "seat":
+                # gap cells are stored as null by polish_seat_layout
+                if cell and cell.get("grid_type") == "seat":
                     category = cell.get("category")
                     price = price_dict.get(category)
                     if price is not None:
@@ -148,9 +158,10 @@ class SeatLayoutService:
         return show_obj.category_pricing
 
     async def get_booked_seats(self, show_id: str) -> list:
-        """Fetch booked seats for a show."""
+        """Fetch booked (non-cancelled) seats for a show."""
         query = select(BookedSeatMapModel.seats_number).where(
-            BookedSeatMapModel.show_id == show_id
+            BookedSeatMapModel.show_id == show_id,
+            BookedSeatMapModel.is_cancelled == False,
         )
         result = await self.db.execute(query)
         return result.scalars().all()
