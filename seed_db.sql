@@ -74,14 +74,9 @@ FROM roles r, permissions p
 WHERE r.role = 'admin';
 
 
--- USER → BASIC
-INSERT INTO roles_permissions_map (role_id, permission_id)
-SELECT r.id, p.id 
-FROM roles r, permissions p
-WHERE r.role = 'user'
-AND p.permission IN (
-    'read-movies'
-);
+-- USER → NONE
+-- Regular users hold no admin-panel permissions: public browsing and
+-- booking routes only require authentication, not permissions.
 
 
 -- =========================================

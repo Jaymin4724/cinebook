@@ -55,7 +55,9 @@ THEATRE_ADMIN_PERMISSIONS = [
     "verify-ticket",
 ]
 
-USER_PERMISSIONS = ["read-movies"]
+# Regular users hold no admin-panel permissions: public browsing and
+# booking routes only require authentication, not permissions.
+USER_PERMISSIONS = []
 
 # Truncated between tests; roles/permissions seed data is kept.
 DATA_TABLES = [
