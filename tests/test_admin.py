@@ -1,155 +1,422 @@
-import pytest
-from fastapi import status
-from unittest.mock import patch, AsyncMock
-from tests.conftest import global_fake_redis
-from tests.test_utils import assert_response_structure, assert_list_response
+import uuid
+
+from sqlalchemy import select
+
+from app.models import (
+    UserModel,
+    TheatreModel,
+    TheatreOperatorMapModel,
+    MovieModel,
+)
+
+from tests import factories
 
 
-async def signin_as_admin(client):
-    email = "jaymin.dave@armakuni.com"
-    await client.post("/api/v1/auth/send-otp", json={"email": email})
-    otp = await global_fake_redis.hget(email, "otp")
-    response = await client.post(
-        "/api/v1/auth/signin", json={"email": email, "otp": otp}
+# --- OMDB STUBBING ---
+class _FakeResponse:
+    def __init__(self, json_data, status_code=200):
+        self._json = json_data
+        self.status_code = status_code
+
+    def json(self):
+        return self._json
+
+
+class _FakeOMDBClient:
+    """Stands in for the httpx.AsyncClient the admin service opens for OMDB."""
+
+    def __init__(self, response):
+        self._response = response
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        return False
+
+    async def get(self, url, **kwargs):
+        return self._response
+
+
+def _omdb_payload(**overrides):
+    payload = {
+        "Response": "True",
+        "Title": "inception",
+        "Runtime": "148 min",
+        "Plot": "a mind-bending heist",
+        "Genre": "sci-fi",
+        "imdbRating": "8.8",
+        "imdbID": "tt1375666",
+    }
+    payload.update(overrides)
+    return payload
+
+
+def _patch_omdb(monkeypatch, json_data, status_code=200):
+    fake = _FakeOMDBClient(_FakeResponse(json_data, status_code=status_code))
+    monkeypatch.setattr(
+        "app.services.admin_service.httpx.AsyncClient", lambda: fake
     )
-    token = response.json()["data"]["access_token"]
-    client.headers.update({"Authorization": f"Bearer {token}"})
 
 
-MOCK_OMDB_RESPONSE = {
-    "Response": "True",
-    "Title": "The Shawshank Redemption",
-    "Runtime": "142 min",
-    "Plot": "Two imprisoned men bond over a number of years.",
-    "Genre": "Drama",
-    "imdbRating": "9.3",
-    "imdbID": "tt0111161",
-}
+# --- CREATE USER ---
+async def test_admin_creates_theatre_admin_user(
+    client, fake_redis, admin_headers, db_session
+):
+    await client.post("/api/v1/auth/send-otp", json={"email": "newop@test.com"})
+    otp = (await fake_redis.hgetall("newop@test.com"))["otp"]
+
+    response = await client.post(
+        "/api/v1/admin/create-user",
+        json={"email": "newop@test.com", "otp": otp, "role": "theatre_admin"},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 201
+    assert response.json()["data"]["role"] == "theatre_admin"
+
+    user = (
+        await db_session.execute(
+            select(UserModel).where(UserModel.email == "newop@test.com")
+        )
+    ).scalar_one()
+    assert user.is_active
 
 
-@pytest.mark.asyncio(loop_scope="session")
-class TestAdmin:
+async def test_admin_create_user_requires_valid_otp(client, admin_headers):
+    response = await client.post(
+        "/api/v1/admin/create-user",
+        json={"email": "newop@test.com", "otp": "000000", "role": "user"},
+        headers=admin_headers,
+    )
 
-    async def test_create_user_success(self, client):
-        await signin_as_admin(client)
+    assert response.status_code == 404
+    assert response.json()["detail"] == "OTP not found or expired"
 
-        new_email = "newuser@example.com"
-        await client.post("/api/v1/auth/send-otp", json={"email": new_email})
-        otp = await global_fake_redis.hget(new_email, "otp")
 
-        payload = {"email": new_email, "otp": otp, "role": "user"}
-        response = await client.post("/api/v1/admin/create-user", json=payload)
-
-        assert response.status_code == status.HTTP_201_CREATED
-        body = response.json()
-        assert_response_structure(body)
-        assert "created" in body["message"].lower()
-        assert body["data"]["email"] == new_email
-
-    async def test_create_theatre_success(self, client):
-        await signin_as_admin(client)
-
-        payload = {
+# --- CREATE THEATRE ---
+async def test_create_theatre_links_operator_and_syncs_es(
+    client, admin_headers, theatre_admin_user, db_session, es_sync_calls
+):
+    response = await client.post(
+        "/api/v1/admin/create-theatre",
+        json={
             "name": "PVR Cinemas",
-            "area": "Thaltej",
+            "area": "Satellite",
             "city": "Ahmedabad",
-            "operator_email": "jaymin4724@gmail.com",
-        }
-        response = await client.post("/api/v1/admin/create-theatre", json=payload)
+            "operator_email": theatre_admin_user.email,
+        },
+        headers=admin_headers,
+    )
 
-        assert response.status_code == status.HTTP_201_CREATED
-        body = response.json()
-        assert_response_structure(body)
-        assert "successfully" in body["message"].lower()
-        assert body["data"]["name"] == "pvr cinemas"
+    assert response.status_code == 201
+    data = response.json()["data"]
+    assert data["name"] == "pvr cinemas"  # lowercased
 
-    async def test_create_movie_success(self, client):
-        await signin_as_admin(client)
+    theatre = (
+        await db_session.execute(
+            select(TheatreModel).where(TheatreModel.name == "pvr cinemas")
+        )
+    ).scalar_one()
 
-        mock_omdb = AsyncMock()
-        mock_omdb.json = lambda: MOCK_OMDB_RESPONSE
-
-        with patch("httpx.AsyncClient.get", return_value=mock_omdb):
-            response = await client.post(
-                "/api/v1/admin/create-movie", json={"imdb_id": "tt0111161"}
+    operator_map = (
+        await db_session.execute(
+            select(TheatreOperatorMapModel).where(
+                TheatreOperatorMapModel.theatre_id == theatre.id
             )
-
-        assert response.status_code == status.HTTP_201_CREATED
-        body = response.json()
-        assert_response_structure(body)
-        assert "successfully" in body["message"].lower()
-        assert body["data"]["name"] == "the shawshank redemption"
-
-    async def test_get_all_users_success(self, client):
-        await signin_as_admin(client)
-
-        response = await client.get(
-            "/api/v1/admin/users", params={"page": 1, "size": 10}
         )
+    ).scalar_one()
+    assert operator_map.user_id == theatre_admin_user.id
 
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        assert_list_response(body)
-        assert len(body["data"]) >= 1
+    assert len(es_sync_calls) == 1
+    assert es_sync_calls[0]["type"] == "theatre"
+    assert es_sync_calls[0]["name"] == "pvr cinemas"
 
-    async def test_get_all_theatres_success(self, client):
-        await signin_as_admin(client)
 
-        response = await client.get(
-            "/api/v1/admin/theatres", params={"page": 1, "size": 10}
+async def test_create_theatre_unknown_operator_rolls_back(
+    client, admin_headers, db_session, es_sync_calls
+):
+    response = await client.post(
+        "/api/v1/admin/create-theatre",
+        json={
+            "name": "orphan theatre",
+            "area": "satellite",
+            "city": "ahmedabad",
+            "operator_email": "nobody@test.com",
+        },
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Theatre operator not found"
+
+    # the whole transaction rolled back: no theatre row was persisted
+    theatre = (
+        await db_session.execute(
+            select(TheatreModel).where(TheatreModel.name == "orphan theatre")
         )
+    ).scalar_one_or_none()
+    assert theatre is None
+    assert es_sync_calls == []
 
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        assert_list_response(body)
 
-    async def test_get_all_movies_success(self, client):
-        await signin_as_admin(client)
+# --- CREATE MOVIE (OMDB) ---
+async def test_create_movie_from_omdb(
+    client, admin_headers, db_session, es_sync_calls, monkeypatch
+):
+    _patch_omdb(monkeypatch, _omdb_payload())
 
-        response = await client.get(
-            "/api/v1/admin/movies", params={"page": 1, "size": 10}
+    response = await client.post(
+        "/api/v1/admin/create-movie",
+        json={"imdb_id": "tt1375666"},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 201
+    data = response.json()["data"]
+    assert data["name"] == "inception"
+    assert data["rating"] == 8.8
+
+    movie = (
+        await db_session.execute(
+            select(MovieModel).where(MovieModel.imdb_id == "tt1375666")
         )
+    ).scalar_one()
+    assert movie.duration.total_seconds() == 148 * 60
 
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        assert_list_response(body)
+    assert len(es_sync_calls) == 1
+    assert es_sync_calls[0]["type"] == "movie"
 
-    async def test_delete_theatre_success(self, client):
-        await signin_as_admin(client)
 
-        create_resp = await client.post(
-            "/api/v1/admin/create-theatre",
-            json={
-                "name": "Temp Theatre",
-                "area": "Satellite",
-                "city": "Ahmedabad",
-                "operator_email": "jaymin4724@gmail.com",
-            },
+async def test_create_movie_duplicate_imdb_id(
+    client, admin_headers, db_session, monkeypatch
+):
+    await factories.create_movie(db_session, imdb_id="tt1375666")
+    _patch_omdb(monkeypatch, _omdb_payload())
+
+    response = await client.post(
+        "/api/v1/admin/create-movie",
+        json={"imdb_id": "tt1375666"},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Movie already exist"
+
+
+async def test_create_movie_invalid_runtime_not_persisted(
+    client, admin_headers, db_session, monkeypatch
+):
+    _patch_omdb(monkeypatch, _omdb_payload(Runtime="N/A"))
+
+    response = await client.post(
+        "/api/v1/admin/create-movie",
+        json={"imdb_id": "tt1375666"},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 400
+    assert (
+        response.json()["detail"]
+        == "OMDB did not return a valid runtime for this movie"
+    )
+
+    movie = (
+        await db_session.execute(
+            select(MovieModel).where(MovieModel.imdb_id == "tt1375666")
         )
-        theatre_id = create_resp.json()["data"]["id"]
+    ).scalar_one_or_none()
+    assert movie is None
 
-        response = await client.delete(f"/api/v1/admin/theatre/delete/{theatre_id}")
 
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        assert_response_structure(body)
-        assert "deleted" in body["message"].lower()
+async def test_create_movie_omdb_not_found(client, admin_headers, monkeypatch):
+    _patch_omdb(
+        monkeypatch, {"Response": "False", "Error": "Movie not found!"}
+    )
 
-    async def test_delete_movie_success(self, client):
-        await signin_as_admin(client)
+    response = await client.post(
+        "/api/v1/admin/create-movie",
+        json={"title": "does not exist"},
+        headers=admin_headers,
+    )
 
-        mock_omdb = AsyncMock()
-        mock_omdb.json = lambda: MOCK_OMDB_RESPONSE
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Movie not found!"
 
-        with patch("httpx.AsyncClient.get", return_value=mock_omdb):
-            create_resp = await client.post(
-                "/api/v1/admin/create-movie", json={"imdb_id": "tt0068646"}
-            )
-        movie_id = create_resp.json()["data"]["id"]
 
-        response = await client.delete(f"/api/v1/admin/movie/delete/{movie_id}")
+async def test_create_movie_missing_rating_defaults_to_zero(
+    client, admin_headers, monkeypatch
+):
+    _patch_omdb(monkeypatch, _omdb_payload(imdbRating="N/A"))
 
-        assert response.status_code == status.HTTP_200_OK
-        body = response.json()
-        assert_response_structure(body)
-        assert "deleted" in body["message"].lower()
+    response = await client.post(
+        "/api/v1/admin/create-movie",
+        json={"imdb_id": "tt1375666"},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 201
+    assert response.json()["data"]["rating"] == 0.0
+
+
+async def test_create_movie_rejects_both_imdb_id_and_title(client, admin_headers):
+    # rejected by the request schema's model_validator before the service runs
+    response = await client.post(
+        "/api/v1/admin/create-movie",
+        json={"imdb_id": "tt1375666", "title": "inception"},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 422
+
+
+async def test_create_movie_rejects_neither_imdb_id_nor_title(
+    client, admin_headers
+):
+    response = await client.post(
+        "/api/v1/admin/create-movie", json={}, headers=admin_headers
+    )
+
+    assert response.status_code == 422
+
+
+# --- UPDATES ---
+async def test_update_theatre_partial(
+    client, admin_headers, db_session, es_sync_calls
+):
+    theatre = await factories.create_theatre(db_session)
+
+    response = await client.patch(
+        f"/api/v1/admin/theatre/update/{theatre.id}",
+        json={"area": "Bopal"},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["area"] == "bopal"
+    assert data["name"] == theatre.name  # untouched
+    assert len(es_sync_calls) == 1
+
+
+async def test_update_theatre_not_found(client, admin_headers):
+    response = await client.patch(
+        f"/api/v1/admin/theatre/update/{uuid.uuid4()}",
+        json={"area": "bopal"},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Theatre not found"
+
+
+async def test_update_movie_partial(
+    client, admin_headers, db_session, es_sync_calls
+):
+    movie = await factories.create_movie(db_session)
+
+    response = await client.patch(
+        f"/api/v1/admin/movie/update/{movie.id}",
+        json={"rating": 9.1},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["rating"] == 9.1
+    assert len(es_sync_calls) == 1
+
+
+async def test_update_movie_not_found(client, admin_headers):
+    response = await client.patch(
+        f"/api/v1/admin/movie/update/{uuid.uuid4()}",
+        json={"rating": 9.1},
+        headers=admin_headers,
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Movie not found"
+
+
+# --- LIST ENDPOINTS ---
+async def test_get_all_users_paginated(client, admin_headers, db_session):
+    for i in range(3):
+        await factories.create_user(db_session, f"listed{i}@test.com")
+
+    response = await client.get(
+        "/api/v1/admin/users?page=1&size=2", headers=admin_headers
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()["data"]) == 2
+
+
+async def test_get_all_theatres_excludes_deleted(
+    client, admin_headers, db_session
+):
+    await factories.create_theatre(db_session, name="active theatre")
+    await factories.create_theatre(db_session, name="dead theatre", is_active=False)
+
+    response = await client.get("/api/v1/admin/theatres", headers=admin_headers)
+
+    assert response.status_code == 200
+    names = [t["name"] for t in response.json()["data"]]
+    assert names == ["active theatre"]
+
+
+async def test_get_all_movies_excludes_deleted(client, admin_headers, db_session):
+    await factories.create_movie(db_session, name="visible movie")
+    await factories.create_movie(db_session, name="hidden movie", is_deleted=True)
+
+    response = await client.get("/api/v1/admin/movies", headers=admin_headers)
+
+    assert response.status_code == 200
+    names = [m["name"] for m in response.json()["data"]]
+    assert names == ["visible movie"]
+
+
+# --- DELETES (SOFT) ---
+async def test_delete_theatre_soft_deletes_and_hides_from_es(
+    client, admin_headers, db_session, es_sync_calls
+):
+    theatre = await factories.create_theatre(db_session)
+
+    response = await client.delete(
+        f"/api/v1/admin/theatre/delete/{theatre.id}", headers=admin_headers
+    )
+
+    assert response.status_code == 200
+
+    await db_session.refresh(theatre)
+    assert theatre.is_active is False
+
+    assert len(es_sync_calls) == 1
+    assert es_sync_calls[0]["is_hidden"] is True
+
+    # already soft-deleted -> gone for a second delete
+    response = await client.delete(
+        f"/api/v1/admin/theatre/delete/{theatre.id}", headers=admin_headers
+    )
+    assert response.status_code == 404
+
+
+async def test_delete_movie_soft_deletes_and_hides_from_es(
+    client, admin_headers, db_session, es_sync_calls
+):
+    movie = await factories.create_movie(db_session)
+
+    response = await client.delete(
+        f"/api/v1/admin/movie/delete/{movie.id}", headers=admin_headers
+    )
+
+    assert response.status_code == 200
+
+    await db_session.refresh(movie)
+    assert movie.is_deleted is True
+
+    assert len(es_sync_calls) == 1
+    assert es_sync_calls[0]["is_hidden"] is True
+
+    response = await client.delete(
+        f"/api/v1/admin/movie/delete/{movie.id}", headers=admin_headers
+    )
+    assert response.status_code == 404
