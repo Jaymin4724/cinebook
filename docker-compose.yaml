@@ -6,8 +6,7 @@ services:
   # ---------------------------------------------------------------------------
   api:
     build: .
-    entrypoint : ["sh","/cinebook/entrypoint.sh"]
-    command: ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    entrypoint: ["sh", "/cinebook/entrypoint.sh"]
     container_name: fastapi_app_container
     # Start the app with auto-reload (code changes restart the server) and
     # debugpy, so you can attach a debugger on port 5678.

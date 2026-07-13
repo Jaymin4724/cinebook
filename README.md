@@ -1,11 +1,9 @@
 # 🎬 CineBook — Movie Ticket Booking Backend
 
-# CineBook - Online Movie Ticket Booking System
 A production-style backend for a movie ticket booking platform, built with **FastAPI**. It handles everything from passwordless login to concurrency-safe seat booking, role-based dashboards for admins and theatre owners, QR-code ticket verification, and full-text search.
 
 Think of it as the engine behind a "BookMyShow"-style app — the part that makes sure two people can never book the same seat.
 
-Backend system for CineBook, an online movie ticket booking platform with role-based access and real-time seat handling.
 ---
 
 ## ✨ Highlights
@@ -65,28 +63,14 @@ The app follows a clean, layered design. A request flows **top to bottom**, and 
 
 ---
 
-1. User enters email
-2. OTP is generated and stored in Redis with expiry
-3. OTP is sent via email
-4. User submits OTP
-5. OTP is validated and removed
-6. Access and refresh tokens are generated and returned in the response body
 ## 🚀 Quick Start (Docker — recommended)
 
 You only need **Docker Desktop** installed. Everything else (Postgres, Redis, Elasticsearch, the app) runs in containers.
 
 ### 1. Clone
 
-### Token Refresh & Logout
-
-1. Every token carries a unique ID (`jti`); revoked tokens are recorded in Redis until they would have expired anyway
-2. `POST /auth/refresh`: validates the refresh token, rejects it if already revoked, issues a new access + refresh pair, and revokes the old refresh token
-3. `POST /auth/logout`: revokes the current access token, and the refresh token too if one is supplied
-4. Every authenticated request checks the access token against the revocation list, so a logged-out token stops working immediately
-
----
 ```bash
-git clone https://github.com/rudra-gandhi-python-ak/online-ticket-booking-system.git cinebook
+git clone https://github.com/Jaymin4724/cinebook.git
 cd cinebook
 ```
 
@@ -154,19 +138,6 @@ uv run alembic upgrade head
 uv run fastapi dev app/main.py
 ```
 
-### Booking History & Cancellation
-
-1. `GET /users/bookings`: paginated booking history for the current user, newest first
-2. `GET /users/bookings/{id}`: single booking detail, including per-seat status
-3. `POST /users/bookings/{id}/cancel`: cancel a booking, allowed only more than 6 hours before showtime and only once
-4. Cancelling marks the booking and its seats as cancelled and immediately frees the seats in the cached layout
-
-### Profile
-
-1. `GET /users/me`: fetch the current user's profile (email, role, first/last name, mobile number)
-2. `PATCH /users/me`: partially update first name, last name, and/or mobile number
-
-### Account
 Handy shortcuts live in the **Makefile**:
 
 | Command | Does |

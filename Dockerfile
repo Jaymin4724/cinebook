@@ -39,8 +39,7 @@ RUN uv pip install debugpy
 # the (slow) dependency layer above.
 COPY . .
 
-ENV PATH="/cinebook/.venv/bin:$PATH" \
-    PYTHONUNBUFFERED=1
+ENV PATH="/cinebook/.venv/bin:$PATH"
 
 # The port the FastAPI app listens on (documentation only; publishing the port
 # is done in docker-compose.yaml).
