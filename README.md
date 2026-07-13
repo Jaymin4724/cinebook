@@ -8,16 +8,16 @@ Think of it as the engine behind a "BookMyShow"-style app — the part that make
 
 ## ✨ Highlights
 
-| Capability | What it does |
-|---|---|
-| 🔐 **Passwordless auth** | Email + OTP login and Google OAuth 2.0, with JWT access/refresh tokens |
-| 👥 **Role-based access** | Three roles — `user`, `admin`, `theatre_admin` — each permission checked per route |
-| 🪑 **Concurrency-safe seats** | Seats are *locked* in Redis (atomic ops) before booking, so no double-booking |
-| 🎟️ **QR tickets** | Bookings generate an encrypted QR code; theatre staff verify it at the gate |
-| 🔎 **Full-text search** | Movies and theatres indexed in Elasticsearch, kept in sync on every write |
-| 🏢 **Theatre management** | Theatre admins design seat layouts, create screens, and schedule shows |
-| ⚡ **Fully async** | Async SQLAlchemy + asyncpg, async Redis, async Elasticsearch — top to bottom |
-| 🛡️ **Middleware** | Global exception handling + token-bucket rate limiting |
+| Capability                         | What it does                                                                              |
+| ---------------------------------- | ----------------------------------------------------------------------------------------- |
+| 🔐**Passwordless auth**      | Email + OTP login and Google OAuth 2.0, with JWT access/refresh tokens                    |
+| 👥**Role-based access**      | Three roles —`user`, `admin`, `theatre_admin` — each permission checked per route |
+| 🪑**Concurrency-safe seats** | Seats are*locked* in Redis (atomic ops) before booking, so no double-booking            |
+| 🎟️**QR tickets**           | Bookings generate an encrypted QR code; theatre staff verify it at the gate               |
+| 🔎**Full-text search**       | Movies and theatres indexed in Elasticsearch, kept in sync on every write                 |
+| 🏢**Theatre management**     | Theatre admins design seat layouts, create screens, and schedule shows                    |
+| ⚡**Fully async**            | Async SQLAlchemy + asyncpg, async Redis, async Elasticsearch — top to bottom             |
+| 🛡️**Middleware**           | Global exception handling + token-bucket rate limiting                                    |
 
 ---
 
@@ -29,7 +29,7 @@ Think of it as the engine behind a "BookMyShow"-style app — the part that make
 - **Cache / locks:** Redis
 - **Search:** Elasticsearch 9
 - **Package manager:** [`uv`](https://github.com/astral-sh/uv) (fast, modern pip replacement)
-- **Containers:** Docker + Docker Compose
+- **Containers:** Docker + Docker Compose (optional — for spinning up Postgres/Redis/Elasticsearch only)
 - **Tests:** Pytest (async) + coverage
 
 ---
@@ -63,9 +63,11 @@ The app follows a clean, layered design. A request flows **top to bottom**, and 
 
 ---
 
-## 🚀 Quick Start (Docker — recommended)
+## 🚀 Getting Started
 
-You only need **Docker Desktop** installed. Everything else (Postgres, Redis, Elasticsearch, the app) runs in containers.
+This app is meant to be run **directly** (not inside the app's Docker container) — a couple of setup scripts (like the DB seed script below) expect you to edit them locally before running, which doesn't fit well with a containerized app image. You'll need Python 3.12, [`uv`](https://github.com/astral-sh/uv), and running PostgreSQL, Redis, and Elasticsearch instances.
+
+> 💡 **Don't have Postgres/Redis/Elasticsearch installed?** You can still use the repo's `docker-compose.yaml` for just the infra, without touching the app container: `docker compose up db redis elasticsearch -d`. The API itself is run with `uv` as shown below.
 
 ### 1. Clone
 
@@ -74,80 +76,81 @@ git clone https://github.com/Jaymin4724/cinebook.git
 cd cinebook
 ```
 
-### 2. Configure environment
-
-The app reads its config from `.env.docker`. Copy the template and fill in your own values:
+### 2. Install dependencies
 
 ```bash
-cp .env.docker.example .env.docker   # then edit .env.docker
+uv sync
+```
+
+### 3. Configure environment
+
+Copy the template and fill in your own values:
+
+```bash
+cp .env.example .env
 ```
 
 At minimum you'll want to set your own:
 
+- `DB_URL` / `TEST_DB_URL` — point at your Postgres instance
+- `REDIS_HOST` / `REDIS_PORT` / `REDIS_URL` — point at your Redis instance
+- `ES_URL` — point at your Elasticsearch instance
 - `JWT_SECRET_ACCESS_KEY` / `JWT_SECRET_REFRESH_KEY` — any long random strings
 - `MAIL_*` — a Gmail address + [App Password](https://support.google.com/accounts/answer/185833) (needed to send OTP emails)
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — from Google Cloud Console (only for Google login)
 - `OMDB_API_KEY` — a free key from [omdbapi.com](https://www.omdbapi.com/apikey.aspx) (used to fetch movie details by IMDB ID)
+- `ENCRYPTION_PASSWORD` / `ENCRYPTION_STATIC_SALT` — any strings (used to derive the ticket QR-code encryption key)
 
-> ⚠️ **Security note:** never commit real secrets. Keep `.env.docker` out of version control and rotate any keys that were ever committed.
+> ⚠️ **Security note:** never commit real secrets. Keep `.env` out of version control and rotate any keys that were ever committed.
 
-### 3. Run
+### 4. Add your email(s) to the seed script
 
-```bash
-docker compose up --watch
+OTP sign-in auto-creates a plain `user` account for any email — it's the seed script that grants `admin` / `theatre_admin` access. Before seeding, open `app/scripts/seed_db.py` and add the email(s) you'll actually sign in with:
+
+```python
+# app/scripts/seed_db.py  (inside seed_users)
+users_data = [
+    # enter your emails here.
+    ("your-email@gmail.com", True, roles["admin"].id),
+    ("your-other-email@gmail.com", True, roles["theatre_admin"].id),
+]
 ```
 
-That's it. Compose will:
-
-1. Start Postgres, Redis, and Elasticsearch, and wait until each is healthy.
-2. Build the app image and run database migrations automatically (`alembic upgrade head`).
-3. Start the API server with live reload — edits to `./app` sync into the container instantly.
-
-### 4. Open the API
-
-| URL | What |
-|---|---|
-| http://localhost:8000/docs | Interactive Swagger UI |
-| http://localhost:8000/redoc | ReDoc API reference |
-| `localhost:5678` | Attach a debugger (debugpy) |
-
-### 5. (Optional) Seed the database
-
-Roles, permissions, and a starter admin are created by the seed script:
+### 5. Apply migrations
 
 ```bash
-docker compose exec api python -m app.scripts.seed_db
-```
-
----
-
-## 💻 Local Start (without Docker)
-
-You'll need Python 3.12, `uv`, and running Postgres / Redis / Elasticsearch instances.
-
-```bash
-# 1. Install dependencies into a local virtualenv
-uv sync
-
-# 2. Create a .env file (see app/core/config.py for every required variable)
-
-# 3. Apply migrations
 uv run alembic upgrade head
+```
 
-# 4. Run the dev server
+### 6. Seed the database
+
+Creates the roles, permissions, and the admin/theatre_admin users you just added:
+
+```bash
+uv run python -m app.scripts.seed_db
+```
+
+### 7. Run the dev server
+
+```bash
 uv run fastapi dev app/main.py
 ```
 
+### 8. Open the API
+
+| URL                         | What                   |
+| --------------------------- | ---------------------- |
+| http://localhost:8000/docs  | Interactive Swagger UI |
+| http://localhost:8000/redoc | ReDoc API reference    |
+
 Handy shortcuts live in the **Makefile**:
 
-| Command | Does |
-|---|---|
-| `make dep-sync` | `uv sync` |
-| `make fastapi-run` | Run the dev server |
-| `make db-migrate` | Apply migrations (`alembic upgrade head`) |
-| `make db-migration m="msg"` | Autogenerate a new migration |
-| `make docker-watch` | `docker compose up --watch` |
-| `make docker-build` | Build the compose images |
+| Command                       | Does                                        |
+| ----------------------------- | ------------------------------------------- |
+| `make dep-sync`             | `uv sync`                                 |
+| `make fastapi-run`          | Run the dev server                          |
+| `make db-migrate`           | Apply migrations (`alembic upgrade head`) |
+| `make db-migration m="msg"` | Autogenerate a new migration                |
 
 ---
 
@@ -167,47 +170,52 @@ uv run pytest --cov=app  # with coverage
 All routes are prefixed with `/api/v1`. Full, always-up-to-date docs live at `/docs`.
 
 ### Auth — `/auth`
-| Method | Path | Description |
-|---|---|---|
-| POST | `/auth/send-otp` | Send a login OTP to an email |
-| POST | `/auth/signin` | Verify OTP, return tokens |
-| GET | `/auth/google/login` | Redirect to Google login |
-| GET | `/auth/google/callback` | Google OAuth callback |
+
+| Method | Path                      | Description                  |
+| ------ | ------------------------- | ---------------------------- |
+| POST   | `/auth/send-otp`        | Send a login OTP to an email |
+| POST   | `/auth/signin`          | Verify OTP, return tokens    |
+| GET    | `/auth/google/login`    | Redirect to Google login     |
+| GET    | `/auth/google/callback` | Google OAuth callback        |
 
 ### User — `/users`
-| Method | Path | Description |
-|---|---|---|
-| GET | `/users/theatre/{id}/movies` | Movies playing in a theatre |
-| GET | `/users/movie/{id}/theatres` | Theatres showing a movie |
-| GET | `/users/theatre/{id}/movie/{id}` | Shows for a movie in a theatre |
-| GET | `/users/show/{id}` | Show details + seat layout |
-| POST | `/users/show/{id}/seat-lock` | Lock seats before booking |
-| POST | `/users/show/{id}/seat-book` | Confirm booking (issues QR ticket) |
-| DELETE | `/users/user/delete` | Soft-delete own account |
+
+| Method | Path                               | Description                        |
+| ------ | ---------------------------------- | ---------------------------------- |
+| GET    | `/users/theatre/{id}/movies`     | Movies playing in a theatre        |
+| GET    | `/users/movie/{id}/theatres`     | Theatres showing a movie           |
+| GET    | `/users/theatre/{id}/movie/{id}` | Shows for a movie in a theatre     |
+| GET    | `/users/show/{id}`               | Show details + seat layout         |
+| POST   | `/users/show/{id}/seat-lock`     | Lock seats before booking          |
+| POST   | `/users/show/{id}/seat-book`     | Confirm booking (issues QR ticket) |
+| DELETE | `/users/user/delete`             | Soft-delete own account            |
 
 ### Admin — `/admin`
-| Method | Path | Description |
-|---|---|---|
-| POST | `/admin/create-user` | Create a user with a role |
-| POST | `/admin/create-theatre` | Create a theatre |
-| POST | `/admin/create-movie` | Import a movie by IMDB ID |
-| GET | `/admin/users` · `/admin/theatres` · `/admin/movies` | Paginated listings |
-| DELETE | `/admin/theatre/delete/{id}` · `/admin/movie/delete/{id}` | Soft delete |
+
+| Method | Path                                                           | Description               |
+| ------ | -------------------------------------------------------------- | ------------------------- |
+| POST   | `/admin/create-user`                                         | Create a user with a role |
+| POST   | `/admin/create-theatre`                                      | Create a theatre          |
+| POST   | `/admin/create-movie`                                        | Import a movie by IMDB ID |
+| GET    | `/admin/users` · `/admin/theatres` · `/admin/movies`   | Paginated listings        |
+| DELETE | `/admin/theatre/delete/{id}` · `/admin/movie/delete/{id}` | Soft delete               |
 
 ### Theatre Admin — `/theatre-admin`
-| Method | Path | Description |
-|---|---|---|
-| POST | `/theatre-admin/create-layout` | Design a seat layout |
-| POST | `/theatre-admin/create-screen` | Create a screen |
-| POST | `/theatre-admin/create-show` | Schedule a show |
-| GET | `/theatre-admin/my-theatres` · `/my-screens` | Owned resources |
-| DELETE | `/theatre-admin/screen/delete/{id}` · `/show/delete/{id}` | Soft delete |
-| POST | `/theatre-admin/verify-ticket` | Verify a QR ticket at the gate |
+
+| Method | Path                                                           | Description                    |
+| ------ | -------------------------------------------------------------- | ------------------------------ |
+| POST   | `/theatre-admin/create-layout`                               | Design a seat layout           |
+| POST   | `/theatre-admin/create-screen`                               | Create a screen                |
+| POST   | `/theatre-admin/create-show`                                 | Schedule a show                |
+| GET    | `/theatre-admin/my-theatres` · `/my-screens`              | Owned resources                |
+| DELETE | `/theatre-admin/screen/delete/{id}` · `/show/delete/{id}` | Soft delete                    |
+| POST   | `/theatre-admin/verify-ticket`                               | Verify a QR ticket at the gate |
 
 ### Search — `/search`
-| Method | Path | Description |
-|---|---|---|
-| GET | `/search/?q=...&limit=...` | Full-text search over movies & theatres |
+
+| Method | Path                         | Description                             |
+| ------ | ---------------------------- | --------------------------------------- |
+| GET    | `/search/?q=...&limit=...` | Full-text search over movies & theatres |
 
 ---
 
@@ -242,17 +250,11 @@ cinebook/
 │   └── main.py         # App entrypoint (FastAPI instance, middleware, lifespan)
 ├── alembic/            # Migrations
 ├── tests/              # Pytest suite
-├── docker-compose.yaml # Postgres + Redis + Elasticsearch + API
-├── Dockerfile          # App image (uv-based)
-├── entrypoint.sh       # Runs migrations, then starts the server
+├── docker-compose.yaml # Optional: Postgres + Redis + Elasticsearch (+ API image)
+├── Dockerfile          # App image (uv-based; not needed for local dev)
+├── entrypoint.sh       # Runs migrations, then starts the server (used by the app image)
 ├── Makefile            # Common dev commands
 └── pyproject.toml      # Dependencies (managed by uv)
 ```
 
 > 🤝 **Contributing / making changes?** See [`CLAUDE.md`](./CLAUDE.md) for a file-by-file map of where each feature lives.
-
----
-
-## 📝 License
-
-Add your license here.

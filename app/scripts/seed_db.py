@@ -222,7 +222,8 @@ async def seed_users(db, roles):
     print("\n========== SEEDING USERS ==========")
 
     users_data = [
-        ("jaymin.dave@armakuni.com", True, roles["admin"].id),
+        # enter your emails here.
+        ("jaymindrive01@gmail.com", True, roles["admin"].id),
         ("jaymin4724@gmail.com", True, roles["theatre_admin"].id),
     ]
 
