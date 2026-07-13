@@ -1,9 +1,9 @@
-name: online-ticket-booking-system
+name: cinebook
 
 services:
   api:
     build: .
-    entrypoint : ["sh","/online-ticket-booking-system/entrypoint.sh"]
+    entrypoint : ["sh","/cinebook/entrypoint.sh"]
     command: ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     container_name: fastapi_app_container
     ports:
@@ -23,7 +23,7 @@ services:
       watch:
         - action: sync
           path: ./app
-          target: /online-ticket-booking-system/app
+          target: /cinebook/app
         - action: rebuild
           path: ./pyproject.toml
         - action: rebuild

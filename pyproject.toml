@@ -1,7 +1,7 @@
 [project]
-name = "online-ticket-booking-system"
+name = "cinebook"
 version = "0.1.0"
-description = "Add your description here"
+description = "CineBook - Online Movie Ticket Booking System"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -15,6 +15,8 @@ dependencies = [
     "flake8>=7.3.0",
     "httpx>=0.28.1",
     "jose>=1.0.0",
+    "jsonpath-ng>=1.8.0",
+    "lupa>=2.8",
     "pydantic>=2.12.5",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",

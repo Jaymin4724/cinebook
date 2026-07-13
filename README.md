@@ -1,9 +1,9 @@
 
-# Movie Booking Backend - Overview
+# CineBook - Online Movie Ticket Booking System
 
 ## 1. Introduction
 
-Backend system for a movie ticket booking platform with role-based access and real-time seat handling.
+Backend system for CineBook, an online movie ticket booking platform with role-based access and real-time seat handling.
 
 ---
 
@@ -26,7 +26,7 @@ Backend system for a movie ticket booking platform with role-based access and re
 3. OTP is sent via email
 4. User submits OTP
 5. OTP is validated and removed
-6. Tokens are generated and set in cookies
+6. Access and refresh tokens are generated and returned in the response body
 
 ### Google Login
 
@@ -34,6 +34,13 @@ Backend system for a movie ticket booking platform with role-based access and re
 2. Authorization code is received
 3. Code is exchanged for user data
 4. User is created or logged in
+
+### Token Refresh & Logout
+
+1. Every token carries a unique ID (`jti`); revoked tokens are recorded in Redis until they would have expired anyway
+2. `POST /auth/refresh`: validates the refresh token, rejects it if already revoked, issues a new access + refresh pair, and revokes the old refresh token
+3. `POST /auth/logout`: revokes the current access token, and the refresh token too if one is supplied
+4. Every authenticated request checks the access token against the revocation list, so a logged-out token stops working immediately
 
 ---
 
@@ -104,6 +111,18 @@ Backend system for a movie ticket booking platform with role-based access and re
 3. Create booking in database
 4. Update seat status in Redis
 5. Remove locks
+
+### Booking History & Cancellation
+
+1. `GET /users/bookings`: paginated booking history for the current user, newest first
+2. `GET /users/bookings/{id}`: single booking detail, including per-seat status
+3. `POST /users/bookings/{id}/cancel`: cancel a booking, allowed only more than 6 hours before showtime and only once
+4. Cancelling marks the booking and its seats as cancelled and immediately frees the seats in the cached layout
+
+### Profile
+
+1. `GET /users/me`: fetch the current user's profile (email, role, first/last name, mobile number)
+2. `PATCH /users/me`: partially update first name, last name, and/or mobile number
 
 ### Account
 
