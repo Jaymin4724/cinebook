@@ -41,3 +41,19 @@ class MovieOutSchema(MovieBase):
     id: UUID
     duration: timedelta
     is_deleted: bool
+
+
+class UpdateMovieSchema(BaseModel):
+    """Used for partially updating a movie's editable fields.
+
+    `duration` and `imdb_id` are intentionally excluded: duration drives
+    show-overlap validation and ticket-expiry math for already-scheduled
+    shows, and imdb_id is the movie's identity key.
+    """
+
+    model_config = ConfigDict(str_to_lower=True)
+
+    name: str | None = None
+    description: str | None = None
+    rating: float | None = None
+    genre: str | None = None

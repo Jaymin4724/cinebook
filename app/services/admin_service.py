@@ -8,10 +8,35 @@ from app.schemas.user_schema import UserOutSchema
 from app.schemas.theatre_schema import TheatreOutSchema
 from app.schemas.movie_schema import MovieOutSchema
 from app.schemas.standard_schema import ResponseSchema, create_response
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, BackgroundTasks
 import httpx
 from app.core.config import settings
+from app.services.search_sync import queue_search_sync
 from datetime import timedelta
+
+
+def _parse_omdb_runtime_minutes(runtime: str | None) -> int:
+    """Parse OMDB's 'Runtime' field (e.g. '142 min') into minutes."""
+    if not runtime or runtime == "N/A":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OMDB did not return a valid runtime for this movie",
+        )
+    try:
+        return int(runtime.split(" ")[0])
+    except (ValueError, IndexError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OMDB did not return a valid runtime for this movie",
+        )
+
+
+def _parse_omdb_rating(rating: str | None) -> float:
+    """Parse OMDB's 'imdbRating' field, defaulting to 0.0 when unavailable."""
+    try:
+        return float(rating)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 class AdminService:
@@ -50,7 +75,9 @@ class AdminService:
             data=user_data, message=f"User created successfully with role {role}"
         )
 
-    async def create_theatre_service(self, theatre_body: dict) -> ResponseSchema:
+    async def create_theatre_service(
+        self, theatre_body: dict, background_tasks: BackgroundTasks
+    ) -> ResponseSchema:
         """Create a theatre and assign operator to it."""
         theatre_name = theatre_body.get("name").lower()
         operator_email = theatre_body.get("operator_email").lower()
@@ -79,6 +106,8 @@ class AdminService:
                 theatre_id=new_theatre.id, user_id=user_obj
             )
 
+        queue_search_sync(background_tasks, new_theatre)
+
         theatre_data = TheatreOutSchema.model_validate(new_theatre).model_dump(
             mode="json"
         )
@@ -86,21 +115,48 @@ class AdminService:
             data=theatre_data, message="Theatre created successfully"
         )
 
-    async def create_new_movie_service(self, movie_payload) -> ResponseSchema:
-        """Fetch movie data from OMDB and create new movie."""
+    async def update_theatre_service(
+        self, theatre_id: str, update_data: dict, background_tasks: BackgroundTasks
+    ) -> ResponseSchema:
+        """Partially update a theatre's editable fields."""
+        async with self.db.begin():
+            self.theatre_repo.db = self.db
 
-        # ---------- INPUT VALIDATION ----------
-        if not movie_payload.imdb_id and not movie_payload.title:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Provide either imdb_id or title",
+            theatre = await self.theatre_repo.update_theatre_repo(
+                theatre_id=theatre_id, update_data=update_data
             )
 
-        if movie_payload.imdb_id and movie_payload.title:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Provide only one of imdb_id or title",
+        queue_search_sync(background_tasks, theatre)
+
+        theatre_data = TheatreOutSchema.model_validate(theatre).model_dump(mode="json")
+        return create_response(
+            data=theatre_data, message="Theatre updated successfully"
+        )
+
+    async def update_movie_service(
+        self, movie_id: str, update_data: dict, background_tasks: BackgroundTasks
+    ) -> ResponseSchema:
+        """Partially update a movie's editable fields."""
+        async with self.db.begin():
+            self.movie_repo.db = self.db
+
+            movie = await self.movie_repo.update_movie_repo(
+                movie_id=movie_id, update_data=update_data
             )
+
+        queue_search_sync(background_tasks, movie)
+
+        movie_data = MovieOutSchema.model_validate(movie).model_dump(mode="json")
+        return create_response(data=movie_data, message="Movie updated successfully")
+
+    async def create_new_movie_service(
+        self, movie_payload, background_tasks: BackgroundTasks
+    ) -> ResponseSchema:
+        """Fetch movie data from OMDB and create new movie.
+
+        The imdb_id/title exactly-one-of rule is enforced by
+        CreateMovieRequest's model_validator, so it is not re-checked here.
+        """
 
         # ---------- BUILD OMDB PARAMS ----------
         params = {"apikey": settings.OMDB_API_KEY}
@@ -128,6 +184,9 @@ class AdminService:
                 detail=data.get("Error", "Movie not found"),
             )
 
+        duration_minutes = _parse_omdb_runtime_minutes(data.get("Runtime"))
+        rating = _parse_omdb_rating(data.get("imdbRating"))
+
         # ---------- DB OPERATIONS ----------
         async with self.db.begin():
             self.movie_repo.db = self.db
@@ -144,12 +203,14 @@ class AdminService:
 
             movie = await self.movie_repo.create_new_movie_repo(
                 name=data.get("Title"),
-                duration=timedelta(minutes=int(data.get("Runtime").split(" ")[0])),
+                duration=timedelta(minutes=duration_minutes),
                 description=data.get("Plot"),
                 genre=data.get("Genre"),
-                rating=float(data.get("imdbRating")),
+                rating=rating,
                 imdb_id=imdb_id,
             )
+
+        queue_search_sync(background_tasks, movie)
 
         # ---------- RESPONSE ----------
         movie_data = MovieOutSchema.model_validate(movie).model_dump(mode="json")
@@ -192,7 +253,9 @@ class AdminService:
             ]
         return create_response(data=movies_data, message="Movies fetched successfully")
 
-    async def delete_theatre_service(self, theatre_id: str):
+    async def delete_theatre_service(
+        self, theatre_id: str, background_tasks: BackgroundTasks
+    ):
         """Delete theatre by ID."""
         async with self.db.begin():
             self.theatre_repo.db = self.db
@@ -204,11 +267,14 @@ class AdminService:
             theatre_data = TheatreOutSchema.model_validate(theatre_details).model_dump(
                 mode="json"
             )
+
+        queue_search_sync(background_tasks, theatre_details)
+
         return create_response(
             data=theatre_data, message="Theatre deleted successfully"
         )
 
-    async def delete_movie_service(self, movie_id: str):
+    async def delete_movie_service(self, movie_id: str, background_tasks: BackgroundTasks):
         """Delete movie by ID."""
         async with self.db.begin():
             self.movie_repo.db = self.db
@@ -217,4 +283,7 @@ class AdminService:
             movie_data = MovieOutSchema.model_validate(movie_details).model_dump(
                 mode="json"
             )
+
+        queue_search_sync(background_tasks, movie_details)
+
         return create_response(data=movie_data, message="Movie deleted successfully")

@@ -109,6 +109,29 @@ class TheatreRepository:
         result = await self.db.execute(query)
         return result.scalars().all()
 
+    async def update_theatre_repo(
+        self, theatre_id: str, update_data: dict
+    ) -> TheatreModel:
+        """Partially update a theatre's editable fields."""
+        query = select(TheatreModel).where(
+            TheatreModel.id == theatre_id, TheatreModel.is_active == True
+        )
+
+        result = await self.db.execute(query)
+
+        theatre_found = result.scalar_one_or_none()
+
+        if not theatre_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Theatre not found"
+            )
+
+        for field, value in update_data.items():
+            setattr(theatre_found, field, value)
+
+        self.db.add(theatre_found)
+        return theatre_found
+
     async def delete_theatre_repo(self, theatre_id: str):
         """Soft delete theatre by ID if exists."""
         query = select(TheatreModel).where(
