@@ -120,3 +120,34 @@ class UserRepository:
             )
 
         return user_found
+
+    async def _get_active_user_with_relations(self, user_id) -> UserModel:
+        """Fetch an active user with role and details eagerly loaded."""
+        query = (
+            select(UserModel)
+            .where(UserModel.id == user_id, UserModel.is_active == True)
+            .options(selectinload(UserModel.role), selectinload(UserModel.user_detail))
+        )
+        result = await self.db.execute(query)
+        user_found = result.scalar_one_or_none()
+
+        if not user_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            )
+
+        return user_found
+
+    async def get_user_profile_repo(self, user_id) -> UserModel:
+        """Fetch the current user's own profile."""
+        return await self._get_active_user_with_relations(user_id=user_id)
+
+    async def update_user_detail_repo(self, user_id, update_data: dict) -> UserModel:
+        """Update the current user's profile details (first_name, last_name, mobile_no)."""
+        user_found = await self._get_active_user_with_relations(user_id=user_id)
+
+        for field, value in update_data.items():
+            setattr(user_found.user_detail, field, value)
+
+        self.db.add(user_found.user_detail)
+        return user_found
