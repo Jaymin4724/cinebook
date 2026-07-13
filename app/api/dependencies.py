@@ -4,7 +4,7 @@ from fastapi import Depends, HTTPException, Header, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.redis_config import get_redis, Redis
 from app.db.session import get_db
-from app.utils.helper import decode_token
+from app.utils.helper import decode_token, is_token_revoked
 from app.core.config import settings
 
 # Service Imports
@@ -150,19 +150,35 @@ security = HTTPBearer()
 
 
 # --- AUTHENTICATION HELPERS ---
-async def get_user_id(
+async def get_access_token_payload(
     token_data: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-) -> str:
-    """Extract user ID from access token using HTTPBearer."""
+    redis: RedisDep,
+) -> dict:
+    """Decode and validate the current request's access token payload."""
     token = token_data.credentials
 
-    payload = decode_token(token=token, secret=settings.JWT_SECRET_ACCESS_KEY)
+    payload = decode_token(
+        token=token, secret=settings.JWT_SECRET_ACCESS_KEY, expected_type="access"
+    )
 
     if not payload or "sub" not in payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token"
         )
 
+    if await is_token_revoked(redis=redis, jti=payload.get("jti")):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked"
+        )
+
+    return payload
+
+
+AccessTokenPayloadDep = Annotated[dict, Depends(get_access_token_payload)]
+
+
+async def get_user_id(payload: AccessTokenPayloadDep) -> str:
+    """Extract user ID from access token payload."""
     return payload["sub"]
 
 

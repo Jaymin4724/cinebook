@@ -1,6 +1,7 @@
 import secrets
 from datetime import datetime, timedelta, timezone
 from jose import jwt
+from jose.exceptions import JWTError
 from fastapi import Response, HTTPException, status
 from app.core.config import settings
 from app.core.redis_config import Redis
@@ -59,25 +60,39 @@ def _generate_token(
         to_encode["sub"] = str(to_encode["sub"])
 
     expire = datetime.now(timezone.utc) + expires_delta
-    to_encode.update({"exp": expire, "type": token_type})
+    to_encode.update({"exp": expire, "type": token_type, "jti": secrets.token_hex(16)})
 
     return jwt.encode(to_encode, secret, algorithm=settings.JWT_ALGORITHM)
 
 
-def decode_token(token: str, secret: str) -> dict | None:
+def decode_token(
+    token: str, secret: str, expected_type: str | None = None
+) -> dict | None:
     """Decode JWT token and return payload if valid."""
-    payload = jwt.decode(token, secret)
+    try:
+        payload = jwt.decode(token, secret, algorithms=[settings.JWT_ALGORITHM])
+    except JWTError:
+        return None
 
     if not payload:
         return None
 
-    expire_time = payload.get("exp")
-    if expire_time:
-        if datetime.fromtimestamp(expire_time, timezone.utc) < datetime.now(
-            timezone.utc
-        ):
-            return None
+    if expected_type and payload.get("type") != expected_type:
+        return None
+
     return payload
+
+
+async def blacklist_token(redis: Redis, jti: str, exp: int) -> None:
+    """Revoke a token's jti until its own expiry, so it auto-clears from Redis."""
+    ttl = int(exp - datetime.now(timezone.utc).timestamp())
+    if ttl > 0:
+        await redis.set(f"revoked_token_{jti}", "1", ex=ttl)
+
+
+async def is_token_revoked(redis: Redis, jti: str) -> bool:
+    """Check if a token's jti has been revoked."""
+    return bool(await redis.exists(f"revoked_token_{jti}"))
 
 
 def generate_access_token_and_refresh_token(payload: dict, response: Response):
