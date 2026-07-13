@@ -1,12 +1,13 @@
-# Project name shown in Docker Desktop and used to prefix container/volume names.
-name: online-ticket-booking-system
+name: cinebook
 
 services:
   # ---------------------------------------------------------------------------
   # api — our FastAPI application
   # ---------------------------------------------------------------------------
   api:
-    build: .                          # Build the image from the local Dockerfile
+    build: .
+    entrypoint : ["sh","/cinebook/entrypoint.sh"]
+    command: ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     container_name: fastapi_app_container
     # Start the app with auto-reload (code changes restart the server) and
     # debugpy, so you can attach a debugger on port 5678.
@@ -44,8 +45,8 @@ services:
       watch:
         - action: sync                # Copy code changes instantly (no rebuild)
           path: ./app
-          target: /online-ticket-booking-system/app
-        - action: rebuild             # Rebuild the image if dependencies change
+          target: /cinebook/app
+        - action: rebuild
           path: ./pyproject.toml
         - action: rebuild
           path: ./uv.lock

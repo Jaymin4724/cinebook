@@ -6,9 +6,7 @@
 # "slim" = a smaller image with only the essentials, so builds are faster.
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-# The folder inside the container where our app will live and run from.
-# Every command below runs relative to this folder.
-WORKDIR /online-ticket-booking-system
+WORKDIR /cinebook
 
 # ---------------------------------------------------------------------------
 # uv settings (make installs faster and containers cleaner)
@@ -41,16 +39,13 @@ RUN uv pip install debugpy
 # the (slow) dependency layer above.
 COPY . .
 
-# Add the virtual environment's tools to PATH so we can run "alembic",
-# "uvicorn", etc. directly without prefixing them with "uv run".
-ENV PATH="/online-ticket-booking-system/.venv/bin:$PATH"
+ENV PATH="/cinebook/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1
 
 # The port the FastAPI app listens on (documentation only; publishing the port
 # is done in docker-compose.yaml).
 EXPOSE 8000
 
-# Make the startup script executable and use it as the entrypoint.
-# The entrypoint runs first (database migrations), then hands off to the
-# "command" defined in docker-compose.yaml (which starts the server).
-RUN chmod +x entrypoint.sh
-ENTRYPOINT ["./entrypoint.sh"]
+RUN chmod +x /cinebook/entrypoint.sh
+
+ENTRYPOINT ["/cinebook/entrypoint.sh"]
