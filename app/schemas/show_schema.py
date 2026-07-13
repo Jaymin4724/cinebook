@@ -27,3 +27,14 @@ class ShowDetailOutSchema(ShowOutSchema):
     movie_name: str = Field(validation_alias=AliasPath("movie", "name"))
     theatre_name: str = Field(validation_alias=AliasPath("screen", "theatre", "name"))
     screen_name: str = Field(validation_alias=AliasPath("screen", "name"))
+
+
+class UpdateShowSchema(BaseModel):
+    """Used for updating a show's category pricing.
+
+    `start_time`/`screen_id`/`movie_id` are intentionally not editable
+    here: rescheduling would require re-running overlap/timing validation
+    against any already-locked or booked seats for this show.
+    """
+
+    category_price: Dict[str, float] | None = None

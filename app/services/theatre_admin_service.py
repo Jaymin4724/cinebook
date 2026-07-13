@@ -85,6 +85,22 @@ class TheatreAdminService:
             message="New layout created successfully",
         )
 
+    async def update_layout_service(
+        self, layout_id: str, update_data: dict, user_id: str
+    ) -> ResponseSchema:
+        """Partially update a layout's editable fields (name only)."""
+        async with self.db.begin():
+            self.layout_repo.db = self.db
+
+            layout = await self.layout_repo.update_layout_repo(
+                layout_id=layout_id, user_id=user_id, update_data=update_data
+            )
+
+        return create_response(
+            data={"id": layout.id, "name": layout.name},
+            message="Layout updated successfully",
+        )
+
     async def create_screen_service(
         self, screen_body: dict, user_id: str
     ) -> ResponseSchema:
@@ -121,6 +137,20 @@ class TheatreAdminService:
 
         screen_data = ScreenOutSchema.model_validate(new_screen).model_dump(mode="json")
         return create_response(data=screen_data, message="Screen created successfully")
+
+    async def update_screen_service(
+        self, screen_id: str, update_data: dict, user_id: str
+    ) -> ResponseSchema:
+        """Partially update a screen's editable fields (name only)."""
+        async with self.db.begin():
+            self.screen_repo.db = self.db
+
+            screen = await self.screen_repo.update_screen_repo(
+                screen_id=screen_id, user_id=user_id, update_data=update_data
+            )
+
+        screen_data = ScreenOutSchema.model_validate(screen).model_dump(mode="json")
+        return create_response(data=screen_data, message="Screen updated successfully")
 
     async def create_show_service(
         self, show_body: dict, user_id: str
@@ -178,6 +208,32 @@ class TheatreAdminService:
 
             show_data = ShowOutSchema.model_validate(new_show).model_dump(mode="json")
         return create_response(data=show_data, message="Show created successfully")
+
+    async def update_show_service(
+        self, show_id: str, update_data: dict, user_id: str
+    ) -> ResponseSchema:
+        """Update a show's category pricing."""
+        async with self.db.begin():
+            self.show_repo.db = self.db
+            self.screen_repo.db = self.db
+
+            show_found = await self.show_repo.get_show_by_id_and_user(
+                show_id=show_id, user_id=user_id
+            )
+
+            category_price = update_data.get("category_price")
+            if category_price is not None:
+                await validate_category_price(
+                    category_price=category_price,
+                    screen_id=str(show_found.screen_id),
+                    screen_repo=self.screen_repo,
+                )
+                show_found = await self.show_repo.update_show_repo(
+                    show=show_found, category_pricing=category_price
+                )
+
+        show_data = ShowOutSchema.model_validate(show_found).model_dump(mode="json")
+        return create_response(data=show_data, message="Show updated successfully")
 
     async def get_my_theatres_service(self, user_id: str, page: int, size: int):
         """Fetch all theatres mapped to the given user."""
