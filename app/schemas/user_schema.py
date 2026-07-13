@@ -27,6 +27,26 @@ class CreateUserSchema(BaseUserAuth):
     role: Roles
 
 
+class RefreshTokenSchema(BaseModel):
+    """Used for refreshing an access token."""
+
+    refresh_token: str
+
+
+class LogoutSchema(BaseModel):
+    """Used for logging out; refresh_token is optional so both tokens can be revoked."""
+
+    refresh_token: str | None = None
+
+
+class UpdateUserDetailSchema(BaseModel):
+    """Used for partially updating the current user's profile details."""
+
+    first_name: str | None = None
+    last_name: str | None = None
+    mobile_no: str | None = None
+
+
 class RoleOutSchema(BaseModel):
     role: str
     model_config = ConfigDict(from_attributes=True)
