@@ -1,5 +1,9 @@
+import logging
+
 from elasticsearch import AsyncElasticsearch
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 es = AsyncElasticsearch(settings.ES_URL, verify_certs=False)
 
@@ -9,7 +13,7 @@ async def create_index():
     index_name = "booking_search"
 
     if await es.indices.exists(index=index_name):
-        print(f"Index '{index_name}' already exists.")
+        logger.info("Index '%s' already exists.", index_name)
         return
 
     body = {
@@ -23,4 +27,4 @@ async def create_index():
     }
 
     await es.indices.create(index=index_name, body=body, ignore=400)
-    print(f"Index '{index_name}' created.")
+    logger.info("Index '%s' created.", index_name)
