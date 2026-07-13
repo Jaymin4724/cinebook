@@ -1,9 +1,12 @@
+import logging
+import os
 from pathlib import Path
-from fastapi import HTTPException, status
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from app.core.config import settings
 import qrcode
 import tempfile
+
+logger = logging.getLogger(__name__)
 
 
 class EmailService:
@@ -29,15 +32,15 @@ class EmailService:
         body = f"""
         <html>
             <body>
-                <h1>Verify Your Account</h1>
-                <p>Thank you for registering. Please use the following One-Time Password (OTP) to complete your signup:</p>
+                <h1>Verify Your CineBook Account</h1>
+                <p>Thank you for registering with CineBook - Online Movie Ticket Booking System. Please use the following One-Time Password (OTP) to complete your signup:</p>
                 <h2 style="color: #4CAF50;">{otp}</h2>
                 <p>This code is valid for 10 minutes.</p>
             </body>
         </html>
         """
         message = MessageSchema(
-            subject="Your Verification Code",
+            subject="Your CineBook Verification Code",
             recipients=[email_to],
             body=body,
             subtype=MessageType.html,
@@ -45,44 +48,42 @@ class EmailService:
         try:
             await self.fastmail.send_message(message)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send verification email.",
-            )
-        
+            logger.exception("Failed to send OTP email to %s", email_to)
 
     async def send_qr_ticket(self, email_to: str, ticket_hash: str):
-        
+
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(ticket_hash.decode('utf-8'))
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
-        
+
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
             img.save(temp_file.name)
             temp_path = temp_file.name
-        
+
         body = f"""
         <html>
             <body style="text-align: center;">
-                <h1>Your Digital Ticket</h1>
+                <h1>Your CineBook Digital Ticket</h1>
                 <img src="cid:ticket_qr" alt="QR Code" />
             </body>
         </html>
         """
-        
+
         message = MessageSchema(
-            subject="Your Digital Ticket",
+            subject="Your CineBook Digital Ticket",
             recipients=[email_to],
             body=body,
             subtype=MessageType.html,
             attachments=[temp_path]
         )
-        
+
         try:
             await self.fastmail.send_message(message)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send ticket email.",
-            )
+            logger.exception("Failed to send QR ticket email to %s", email_to)
+        finally:
+            try:
+                os.remove(temp_path)
+            except OSError:
+                logger.warning("Failed to remove temp QR file %s", temp_path)

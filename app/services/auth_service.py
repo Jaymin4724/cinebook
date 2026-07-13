@@ -1,6 +1,7 @@
 from app.schemas.standard_schema import ResponseSchema
 import httpx
-from fastapi import Response, HTTPException, status
+import secrets
+from fastapi import Response, HTTPException, status, BackgroundTasks
 from fastapi.responses import RedirectResponse
 from urllib.parse import urlencode
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,9 @@ from app.utils.helper import (
     validate_otp,
     generate_access_token_and_refresh_token,
     generate_otp,
+    decode_token,
+    blacklist_token,
+    is_token_revoked,
 )
 
 from app.services.email_service import EmailService
@@ -37,14 +41,18 @@ class AuthService:
         self.user_repo = user_repo
         self.email_service = email_service
 
-    async def auth_send_otp_service(self, email: str) -> ResponseSchema:
+    async def auth_send_otp_service(
+        self, email: str, background_tasks: BackgroundTasks
+    ) -> ResponseSchema:
         """Generate OTP, store it, and send it to user email."""
         otp = generate_otp()
 
         await self.redis.hset(name=email, mapping={"otp": otp, "tries": 3})
         await self.redis.expire(email, 600)
 
-        await self.email_service.send_otp_email(email_to=email, otp=otp)
+        background_tasks.add_task(
+            self.email_service.send_otp_email, email_to=email, otp=otp
+        )
 
         return create_response(data={"email": email},message="OTP sent to your email")
 
@@ -81,8 +89,65 @@ class AuthService:
                 )
                 return create_response(data=tokens, message="User created successfully")
 
-    def auth_login_google_service(self):
-        """Generate Google OAuth URL and redirect user."""
+    async def auth_refresh_service(
+        self, refresh_token: str, response: Response
+    ) -> ResponseSchema:
+        """Issue a new access/refresh token pair from a valid refresh token."""
+        payload = decode_token(
+            token=refresh_token,
+            secret=settings.JWT_SECRET_REFRESH_KEY,
+            expected_type="refresh",
+        )
+
+        if not payload or "sub" not in payload:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired refresh token",
+            )
+
+        if await is_token_revoked(redis=self.redis, jti=payload.get("jti")):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Refresh token has been revoked",
+            )
+
+        await blacklist_token(
+            redis=self.redis, jti=payload["jti"], exp=payload["exp"]
+        )
+
+        tokens = generate_access_token_and_refresh_token(
+            payload={"user_id": payload["sub"]}, response=response
+        )
+        return create_response(data=tokens, message="Token refreshed successfully")
+
+    async def auth_logout_service(
+        self, access_payload: dict, refresh_token: str | None
+    ) -> ResponseSchema:
+        """Revoke the current access token, and the refresh token if provided."""
+        await blacklist_token(
+            redis=self.redis, jti=access_payload["jti"], exp=access_payload["exp"]
+        )
+
+        if refresh_token:
+            refresh_payload = decode_token(
+                token=refresh_token,
+                secret=settings.JWT_SECRET_REFRESH_KEY,
+                expected_type="refresh",
+            )
+            if refresh_payload:
+                await blacklist_token(
+                    redis=self.redis,
+                    jti=refresh_payload["jti"],
+                    exp=refresh_payload["exp"],
+                )
+
+        return create_response(message="Logged out successfully")
+
+    async def auth_login_google_service(self):
+        """Generate Google OAuth URL with a CSRF state and redirect user."""
+        state = secrets.token_urlsafe(32)
+        await self.redis.set(f"oauth_state_{state}", "1", ex=600)
+
         params = {
             "client_id": GOOGLE_CLIENT_ID,
             "redirect_uri": GOOGLE_REDIRECT_URI,
@@ -90,14 +155,22 @@ class AuthService:
             "scope": "openid email profile",
             "access_type": "offline",
             "prompt": "consent",
+            "state": state,
         }
         url = f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
         return RedirectResponse(url=url)
 
     async def auth_google_callback_service(
-        self, code: str, db: AsyncSession, response: Response
+        self, code: str, state: str, db: AsyncSession, response: Response
     ):
         """Handle Google OAuth callback and log in the user."""
+        # delete is atomic, so each state is single-use
+        if not await self.redis.delete(f"oauth_state_{state}"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired OAuth state",
+            )
+
         token_data = {
             "code": code,
             "client_id": GOOGLE_CLIENT_ID,
