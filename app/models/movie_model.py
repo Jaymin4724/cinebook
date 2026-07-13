@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class MovieModel(Base):
     __tablename__ = "movies"
 
-    name: Mapped[str] = mapped_column(String(50), index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     duration: Mapped[timedelta] = mapped_column(INTERVAL)
     description: Mapped[str] = mapped_column(String)
     rating: Mapped[float] = mapped_column(

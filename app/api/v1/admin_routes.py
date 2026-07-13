@@ -1,11 +1,11 @@
-from fastapi import APIRouter, status, Depends, Body, Query
+from fastapi import APIRouter, status, Depends, Body, Query, BackgroundTasks
 from app.api.dependencies import AdminServiceDep, permission_required
 
 from app.schemas.user_schema import CreateUserSchema
 from app.schemas.standard_schema import ResponseSchema
-from app.schemas.theatre_schema import CreateTheatreSchema
+from app.schemas.theatre_schema import CreateTheatreSchema, UpdateTheatreSchema
 from app.schemas.pagination_schema import PaginationSchema
-from app.schemas.movie_schema import CreateMovieRequest
+from app.schemas.movie_schema import CreateMovieRequest, UpdateMovieSchema
 
 from typing import Annotated
 
@@ -33,11 +33,13 @@ async def create_user_route(
     dependencies=[Depends(permission_required("create-theatre"))],
 )
 async def create_theatre_route(
-    theatre_body: CreateTheatreSchema, admin_service: AdminServiceDep
+    theatre_body: CreateTheatreSchema,
+    admin_service: AdminServiceDep,
+    background_tasks: BackgroundTasks,
 ):
     """Create a new theatre."""
     return await admin_service.create_theatre_service(
-        theatre_body=theatre_body.model_dump()
+        theatre_body=theatre_body.model_dump(), background_tasks=background_tasks
     )
 
 
@@ -48,10 +50,54 @@ async def create_theatre_route(
     dependencies=[Depends(permission_required("create-movie"))],
 )
 async def create_movie_route(
-    movie_payload: CreateMovieRequest, admin_service: AdminServiceDep
+    movie_payload: CreateMovieRequest,
+    admin_service: AdminServiceDep,
+    background_tasks: BackgroundTasks,
 ):
     """Create a new movie using IMDB ID."""
-    return await admin_service.create_new_movie_service(movie_payload)
+    return await admin_service.create_new_movie_service(
+        movie_payload, background_tasks=background_tasks
+    )
+
+
+@admin_router.patch(
+    "/theatre/update/{theatre_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("update-theatre"))],
+)
+async def update_theatre_route(
+    theatre_id: str,
+    theatre_body: UpdateTheatreSchema,
+    admin_service: AdminServiceDep,
+    background_tasks: BackgroundTasks,
+):
+    """Partially update a theatre's name/area/city."""
+    return await admin_service.update_theatre_service(
+        theatre_id=theatre_id,
+        update_data=theatre_body.model_dump(exclude_unset=True),
+        background_tasks=background_tasks,
+    )
+
+
+@admin_router.patch(
+    "/movie/update/{movie_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("update-movie"))],
+)
+async def update_movie_route(
+    movie_id: str,
+    movie_body: UpdateMovieSchema,
+    admin_service: AdminServiceDep,
+    background_tasks: BackgroundTasks,
+):
+    """Partially update a movie's name/description/rating/genre."""
+    return await admin_service.update_movie_service(
+        movie_id=movie_id,
+        update_data=movie_body.model_dump(exclude_unset=True),
+        background_tasks=background_tasks,
+    )
 
 
 @admin_router.get(
@@ -105,9 +151,15 @@ async def get_all_movies_route(
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-theatre"))],
 )
-async def delete_theatre_router(theatre_id: str, admin_service: AdminServiceDep):
+async def delete_theatre_router(
+    theatre_id: str,
+    admin_service: AdminServiceDep,
+    background_tasks: BackgroundTasks,
+):
     """Delete theatre by ID."""
-    return await admin_service.delete_theatre_service(theatre_id=theatre_id)
+    return await admin_service.delete_theatre_service(
+        theatre_id=theatre_id, background_tasks=background_tasks
+    )
 
 
 @admin_router.delete(
@@ -116,6 +168,12 @@ async def delete_theatre_router(theatre_id: str, admin_service: AdminServiceDep)
     response_model=ResponseSchema,
     dependencies=[Depends(permission_required("delete-movie"))],
 )
-async def delete_movie_router(movie_id: str, admin_services: AdminServiceDep):
+async def delete_movie_router(
+    movie_id: str,
+    admin_services: AdminServiceDep,
+    background_tasks: BackgroundTasks,
+):
     """Delete movie by ID."""
-    return await admin_services.delete_movie_service(movie_id=movie_id)
+    return await admin_services.delete_movie_service(
+        movie_id=movie_id, background_tasks=background_tasks
+    )

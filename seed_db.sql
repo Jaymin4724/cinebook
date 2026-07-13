@@ -27,18 +27,20 @@ INSERT INTO roles (role) VALUES
 -- =========================================
 -- 3. INSERT PERMISSIONS
 -- =========================================
-INSERT INTO permissions (permission) VALUES 
+INSERT INTO permissions (permission) VALUES
 ('create-user'), ('read-users'),
 
-('create-theatre'), ('read-theatres'), ('delete-theatre'),
+('create-theatre'), ('read-theatres'), ('delete-theatre'), ('update-theatre'),
 
-('create-movie'), ('read-movies'), ('delete-movie'),
+('create-movie'), ('read-movies'), ('delete-movie'), ('update-movie'),
 
-('create-layout'),
+('create-layout'), ('update-layout'),
 
-('create-screen'), ('read-my-theatres'), ('read-my-screens'), ('delete-screen'),
+('create-screen'), ('read-my-theatres'), ('read-my-screens'), ('delete-screen'), ('update-screen'),
 
-('create-show'), ('delete-show');
+('create-show'), ('delete-show'), ('update-show'),
+
+('verify-ticket');
 
 
 -- =========================================
@@ -52,12 +54,16 @@ FROM roles r, permissions p
 WHERE r.role = 'theatre_admin'
 AND p.permission IN (
     'create-layout',
+    'update-layout',
     'create-screen',
     'read-my-theatres',
     'read-my-screens',
     'delete-screen',
+    'update-screen',
     'create-show',
-    'delete-show'
+    'delete-show',
+    'update-show',
+    'verify-ticket'
 );
 
 

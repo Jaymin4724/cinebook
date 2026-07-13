@@ -17,3 +17,13 @@ class TheatreOutSchema(TheatreBase):
     id: UUID
     is_active: bool
     model_config = ConfigDict(from_attributes=True)
+
+
+class UpdateTheatreSchema(BaseModel):
+    """Used for partially updating a theatre's name/area/city."""
+
+    model_config = ConfigDict(str_to_lower=True)
+
+    name: str | None = None
+    area: str | None = None
+    city: str | None = None

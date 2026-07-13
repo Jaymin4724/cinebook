@@ -90,6 +90,21 @@ class MovieRepository:
         result = await self.db.execute(query)
         return result.scalars().all()
 
+    async def update_movie_repo(self, movie_id: str, update_data: dict) -> MovieModel:
+        """Partially update a movie's editable fields."""
+        movie_found = await self.get_movie_by_id(movie_id=movie_id)
+
+        if not movie_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found"
+            )
+
+        for field, value in update_data.items():
+            setattr(movie_found, field, value)
+
+        self.db.add(movie_found)
+        return movie_found
+
     async def delete_movie_repo(self, movie_id: str):
         """Soft delete movie by ID if exists."""
         query = select(MovieModel).where(
