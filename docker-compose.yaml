@@ -74,7 +74,7 @@ services:
   # redis — in-memory cache / key-value store
   # ---------------------------------------------------------------------------
   redis:
-    image: redis:alpine
+    image: redis/redis-stack:latest
     container_name: redis_container
     volumes:
       - redis_data:/data              # Persist cached data between restarts
