@@ -53,10 +53,13 @@ class BookingTicketRepository:
 
         query = select(
             BookedTicketModel
+        ).join(
+            BookingModel, BookedTicketModel.booking_id == BookingModel.id
         ).where(
             BookedTicketModel.booking_id == booking_id,
             BookedTicketModel.expired_time >= now,
-            BookedTicketModel.is_used == False
+            BookedTicketModel.is_used == False,
+            BookingModel.is_cancelled == False
         )
 
         result = await self.db.execute(query)
