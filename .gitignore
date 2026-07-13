@@ -3,3 +3,5 @@ venv
 .env*
 !.env.example
 !.env.docker.example
+pitch.txt
+.coverage

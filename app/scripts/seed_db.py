@@ -1,5 +1,5 @@
 import asyncio
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from app.db.session import AsyncSessionLocal
 
 from app.models import (
@@ -78,17 +78,23 @@ async def seed_permissions(db):
         "read-users",
         "create-theatre",
         "read-theatres",
+        "update-theatre",
         "delete-theatre",
         "create-movie",
         "read-movies",
+        "update-movie",
         "delete-movie",
         "create-layout",
+        "update-layout",
         "create-screen",
+        "update-screen",
         "read-my-theatres",
         "read-my-screens",
         "delete-screen",
         "create-show",
+        "update-show",
         "delete-show",
+        "verify-ticket",
     ]
 
     existing = await get_existing_map(
@@ -132,12 +138,16 @@ async def seed_role_permissions(db, roles, permissions):
     # THEATRE ADMIN
     theatre_admin_permissions = [
         "create-layout",
+        "update-layout",
         "create-screen",
+        "update-screen",
         "read-my-theatres",
         "read-my-screens",
         "delete-screen",
         "create-show",
+        "update-show",
         "delete-show",
+        "verify-ticket",
     ]
 
     theatre_admin_id = roles["theatre_admin"].id
@@ -150,6 +160,7 @@ async def seed_role_permissions(db, roles, permissions):
         permission_ids.append(pid)
 
     await insert_role_permissions_if_missing(db, theatre_admin_id, permission_ids)
+    await remove_role_permissions_if_stale(db, theatre_admin_id, permission_ids)
 
     # ADMIN → ALL
     admin_id = roles["admin"].id
@@ -162,20 +173,17 @@ async def seed_role_permissions(db, roles, permissions):
         all_permission_ids.append(pid)
 
     await insert_role_permissions_if_missing(db, admin_id, all_permission_ids)
+    await remove_role_permissions_if_stale(db, admin_id, all_permission_ids)
 
-    # USER → BASIC
+    # USER → NONE (public browsing and booking only need authentication,
+    # not permissions; admin-panel routes stay admin/theatre_admin only)
     user_id = roles["user"].id
     print(f"[ROLE-PERM] user ID → {user_id}")
 
-    user_permissions = ["read-movies"]
-
     user_permission_ids = []
-    for perm in user_permissions:
-        pid = permissions[perm].id
-        print(f"[ROLE-PERM] user gets → {perm} (id={pid})")
-        user_permission_ids.append(pid)
 
     await insert_role_permissions_if_missing(db, user_id, user_permission_ids)
+    await remove_role_permissions_if_stale(db, user_id, user_permission_ids)
 
 
 async def insert_role_permissions_if_missing(db, role_id, permission_ids):
@@ -213,6 +221,23 @@ async def insert_role_permissions_if_missing(db, role_id, permission_ids):
         print("[ROLE-PERM] Insert completed")
     else:
         print("[ROLE-PERM] No new mappings needed")
+
+
+async def remove_role_permissions_if_stale(db, role_id, permission_ids):
+    """Revoke mappings that are no longer part of the role's permission set."""
+    print(f"\n[ROLE-PERM] Checking stale mappings for role_id={role_id}")
+
+    query = delete(RolePermissionMap).where(
+        RolePermissionMap.role_id == role_id,
+        RolePermissionMap.permission_id.not_in(permission_ids),
+    )
+
+    result = await db.execute(query)
+
+    if result.rowcount:
+        print(f"[ROLE-PERM] Removed {result.rowcount} stale mappings")
+    else:
+        print("[ROLE-PERM] No stale mappings to remove")
 
 
 # ========== USERS ==========

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     TEST_DB_URL: str
 
     REDIS_HOST: str
-    REDIS_PORT: str
+    REDIS_PORT: int
     REDIS_URL: str
 
     MAIL_USERNAME: EmailStr
