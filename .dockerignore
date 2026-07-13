@@ -1,5 +1,19 @@
+# Files/folders below are NOT copied into the image. Keeping the build
+# context small makes builds faster and images cleaner.
+
+# Python virtual environment (recreated inside the container by "uv sync")
 .venv
+
+# Local environment files (secrets stay on your machine; compose loads them)
 .env*
+
+# Python caches and compiled files
 __pycache__
+*.pyc
+.pytest_cache
+
+# Git and project docs not needed at runtime
+.git
+.gitignore
 README.md
 Makefile
