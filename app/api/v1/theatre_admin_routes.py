@@ -2,9 +2,9 @@ from fastapi import APIRouter, status, Depends, Body, Query
 from app.api.dependencies import permission_required
 
 from app.schemas.standard_schema import ResponseSchema
-from app.schemas.layout_schema import CreateLayoutSchema
-from app.schemas.screen_schema import CreateScreenSchema
-from app.schemas.show_schema import CreateShowSchema
+from app.schemas.layout_schema import CreateLayoutSchema, UpdateLayoutSchema
+from app.schemas.screen_schema import CreateScreenSchema, UpdateScreenSchema
+from app.schemas.show_schema import CreateShowSchema, UpdateShowSchema
 from app.schemas.pagination_schema import PaginationSchema
 
 from app.api.dependencies import TheatreAdminServiceDep, GetUserDep
@@ -31,6 +31,26 @@ async def create_layout_route(
     )
 
 
+@theatre_admin_router.patch(
+    "/layout/update/{layout_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("update-layout"))],
+)
+async def update_layout_route(
+    layout_id: str,
+    layout_body: Annotated[UpdateLayoutSchema, Body(...)],
+    theatre_admin_service: TheatreAdminServiceDep,
+    user_id: GetUserDep,
+):
+    """Rename a seat layout."""
+    return await theatre_admin_service.update_layout_service(
+        layout_id=layout_id,
+        update_data=layout_body.model_dump(exclude_unset=True),
+        user_id=user_id,
+    )
+
+
 @theatre_admin_router.post(
     "/create-screen",
     status_code=status.HTTP_201_CREATED,
@@ -48,6 +68,26 @@ async def create_screen_route(
     )
 
 
+@theatre_admin_router.patch(
+    "/screen/update/{screen_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("update-screen"))],
+)
+async def update_screen_route(
+    screen_id: str,
+    screen_body: Annotated[UpdateScreenSchema, Body(...)],
+    theatre_admin_service: TheatreAdminServiceDep,
+    user_id: GetUserDep,
+):
+    """Rename a screen."""
+    return await theatre_admin_service.update_screen_service(
+        screen_id=screen_id,
+        update_data=screen_body.model_dump(exclude_unset=True),
+        user_id=user_id,
+    )
+
+
 @theatre_admin_router.post(
     "/create-show",
     status_code=status.HTTP_201_CREATED,
@@ -62,6 +102,26 @@ async def create_show_route(
     """Create a new show for a screen."""
     return await theatre_admin_service.create_show_service(
         show_body=show_body.model_dump(), user_id=user_id
+    )
+
+
+@theatre_admin_router.patch(
+    "/show/update/{show_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=ResponseSchema,
+    dependencies=[Depends(permission_required("update-show"))],
+)
+async def update_show_route(
+    show_id: str,
+    show_body: Annotated[UpdateShowSchema, Body(...)],
+    theatre_admin_service: TheatreAdminServiceDep,
+    user_id: GetUserDep,
+):
+    """Update a show's category pricing."""
+    return await theatre_admin_service.update_show_service(
+        show_id=show_id,
+        update_data=show_body.model_dump(exclude_unset=True),
+        user_id=user_id,
     )
 
 

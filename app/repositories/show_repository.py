@@ -108,6 +108,42 @@ class ShowRepository:
         """Fetch show layout by show ID."""
         return await seat_layout_service.generate_show_layout(show_id)
 
+    async def get_show_by_id_and_user(self, show_id: str, user_id: str) -> ShowModel:
+        """Fetch a show if it belongs to a screen owned by the user."""
+        query = (
+            select(ShowModel)
+            .join(ScreenModel, ShowModel.screen_id == ScreenModel.id)
+            .join(TheatreModel, ScreenModel.theatre_id == TheatreModel.id)
+            .join(
+                TheatreOperatorMapModel,
+                TheatreModel.id == TheatreOperatorMapModel.theatre_id,
+            )
+            .where(
+                ShowModel.id == show_id,
+                ShowModel.is_deleted == False,
+                TheatreOperatorMapModel.user_id == user_id,
+            )
+        )
+
+        result = await self.db.execute(query)
+
+        show_found = result.scalar_one_or_none()
+
+        if not show_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Show not found"
+            )
+
+        return show_found
+
+    async def update_show_repo(
+        self, show: ShowModel, category_pricing: dict
+    ) -> ShowModel:
+        """Update a show's category pricing."""
+        show.category_pricing = category_pricing
+        self.db.add(show)
+        return show
+
     async def delete_show_repo(self, show_id: str, user_id: str):
         """Soft delete show if it belongs to user."""
         query = (

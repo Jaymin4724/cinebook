@@ -14,6 +14,18 @@ class ScreenOutSchema(CreateScreenSchema):
     id: UUID
 
 
+class UpdateScreenSchema(BaseModel):
+    """Used for renaming a screen.
+
+    `layout_id` is intentionally not editable here: shows already
+    reference this screen's layout for seat/category pricing.
+    """
+
+    model_config = ConfigDict(str_to_lower=True)
+
+    name: str | None = None
+
+
 class ScreenWithDetailsSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -85,6 +85,25 @@ class ScreenRepository:
 
         return result.scalar_one_or_none()
 
+    async def update_screen_repo(
+        self, screen_id: str, user_id: str, update_data: dict
+    ) -> ScreenModel:
+        """Partially update a screen's editable fields (name only)."""
+        screen_found = await self.validate_screen_and_user(
+            screen_id=screen_id, user_id=user_id
+        )
+
+        if not screen_found:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Screen not found"
+            )
+
+        for field, value in update_data.items():
+            setattr(screen_found, field, value)
+
+        self.db.add(screen_found)
+        return screen_found
+
     async def delete_screen_repo(self, screen_id: str, user_id: str):
         """Soft delete screen if it belongs to user."""
         query = (
