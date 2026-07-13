@@ -1,0 +1,3252 @@
+{
+  "info": {
+    "_postman_id": "4735d734-8975-4d67-a2db-fc228d6b3418",
+    "name": "CineBook",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "40205528"
+  },
+  "item": [
+    {
+      "name": "1 health check",
+      "item": [
+        {
+          "name": "health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/health",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "health check",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/health",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "health"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 16:25:42 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "76"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"status\": \"ok\",\n    \"checks\": {\n        \"database\": \"ok\",\n        \"redis\": \"ok\",\n        \"elasticsearch\": \"ok\"\n    }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 auth",
+      "item": [
+        {
+          "name": "otp send",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"{{USER_EMAIL}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/auth/send-otp",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "send-otp"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "otp send",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"email\": \"jaymindrive2023@gmail.com\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/auth/send-otp",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "send-otp"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 16:54:49 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "96"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"OTP sent to your email\",\n    \"data\": {\n        \"email\": \"jaymindrive2023@gmail.com\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "user login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"{{USER_EMAIL}}\",\r\n  \"otp\": \"{{OTP}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/auth/signin",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "signin"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "user login",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"email\": \"{{USER_EMAIL}}\",\r\n  \"otp\": \"{{OTP}}\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/auth/signin",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "signin"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 16:55:21 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "582"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"User login successfully\",\n    \"data\": {\n        \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OWViYzU0NS02Zjk4LTRiZmQtYjU3Mi1hNWZiMzAwOThmNGYiLCJleHAiOjE3ODM5NjUzMjEsInR5cGUiOiJhY2Nlc3MiLCJqdGkiOiI1OGY0OWMyNjY2NDRlZWY1MjdmZDRjYjZlOWQzMmM0ZCJ9.xN3TjInhDed7UdzFKTbJx6X7KutekC-h74g_OO2aiA0\",\n        \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OWViYzU0NS02Zjk4LTRiZmQtYjU3Mi1hNWZiMzAwOThmNGYiLCJleHAiOjE3ODQ1NjY1MjEsInR5cGUiOiJyZWZyZXNoIiwianRpIjoiMzA5ZjA4ZGY3MjQ1ZmU4MjQwZjcxMDY2MTMwZGFmZGYifQ.8FNn2aB2lRwzUifNdTnQFPkkZBoeiWQI-PO4qttuydI\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "refresh token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"refresh_token\": \"{{REFRESH_TOKEN}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/auth/refresh",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "refresh token",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"refresh_token\": \"{{REFRESH_TOKEN}}\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/auth/refresh",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "refresh"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 16:58:02 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "587"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Token refreshed successfully\",\n    \"data\": {\n        \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OWViYzU0NS02Zjk4LTRiZmQtYjU3Mi1hNWZiMzAwOThmNGYiLCJleHAiOjE3ODM5NjU0ODIsInR5cGUiOiJhY2Nlc3MiLCJqdGkiOiI2MDNiN2IzMGU5ODljZGFlOTNjYzU2ZjEyOTdiZDE3OCJ9.581bZaDgDLmU2kwFBJtQ5iaHw4-UKDl4N5CVFP-WWtE\",\n        \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OWViYzU0NS02Zjk4LTRiZmQtYjU3Mi1hNWZiMzAwOThmNGYiLCJleHAiOjE3ODQ1NjY2ODIsInR5cGUiOiJyZWZyZXNoIiwianRpIjoiMWIxMjhlMTU2Mzg2ZmQ4MDk1NWY4YmZkY2VkMzY1NWUifQ.gN6QfrtIBsGKVbGkscNV_o6LoxRP8M3RKx3k7LohEcc\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"refresh_token\": \"{{REFRESH_TOKEN}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/auth/logout",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3 admin",
+      "item": [
+        {
+          "name": "create movie",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n//   \"imdb_id\": \"tt30144839\",\r\n  \"title\": \"Project Hail Mary\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/admin/create-movie",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "create-movie"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "create movie",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"imdb_id\": \"tt30144839\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/create-movie",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "create-movie"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 17:29:43 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "391"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Movie created successfully\",\n    \"data\": {\n        \"name\": \"one battle after another\",\n        \"description\": \"when their enemy resurfaces after 16 years, a group of ex-revolutionaries reunite to rescue the daughter of one of their own.\",\n        \"rating\": 7.7,\n        \"genre\": \"action, crime, drama\",\n        \"imdb_id\": \"tt30144839\",\n        \"id\": \"3cba0604-652c-4bd2-8a11-243c5165ed65\",\n        \"duration\": \"PT2H41M\",\n        \"is_deleted\": false\n    }\n}"
+            },
+            {
+              "name": "create movie",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n//   \"imdb_id\": \"tt30144839\",\r\n  \"title\": \"Project Hail Mary\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/create-movie",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "create-movie"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 17:32:24 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "467"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Movie created successfully\",\n    \"data\": {\n        \"name\": \"project hail mary\",\n        \"description\": \"a science teacher wakes up alone on a spaceship. as his memory returns, he uncovers a mission to stop a mysterious substance killing earth's sun, and realizes that an unexpected friendship may be the key.\",\n        \"rating\": 8.3,\n        \"genre\": \"adventure, comedy, drama\",\n        \"imdb_id\": \"tt12042730\",\n        \"id\": \"cfa66a0c-1a67-4eb5-8f32-de5a8f508a38\",\n        \"duration\": \"PT2H36M\",\n        \"is_deleted\": false\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "create user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"{{USER_EMAIL}}\",\r\n  \"otp\": \"{{OTP}}\",\r\n  \"role\": \"theatre_admin\"\r\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/admin/create-user",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "create-user"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "create user",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"email\": \"{{USER_EMAIL}}\",\r\n  \"otp\": \"{{OTP}}\",\r\n  \"role\": \"theatre_admin\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/create-user",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "create-user"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 17:42:45 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "243"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"User created successfully with role theatre_admin\",\n    \"data\": {\n        \"id\": \"cdf751ad-a85e-4ca2-94be-3e2851106c9a\",\n        \"email\": \"jaymindrive2024@gmail.com\",\n        \"is_active\": true,\n        \"role\": \"theatre_admin\",\n        \"google_id\": null,\n        \"user_detail\": null\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "create theatre",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"PVR Acropolis\",\r\n  \"area\": \"Thaltej\",\r\n  \"city\": \"Ahmedabad\",\r\n  \"operator_email\": \"jaymin4724@gmail.com\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/admin/create-theatre",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "create-theatre"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "create theatre",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"PVR Acropolis\",\r\n  \"area\": \"Thaltej\",\r\n  \"city\": \"Ahmedabad\",\r\n  \"operator_email\": \"jaymin4724@gmail.com\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/create-theatre",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "create-theatre"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 17:44:46 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "186"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Theatre created successfully\",\n    \"data\": {\n        \"name\": \"pvr acropolis\",\n        \"area\": \"thaltej\",\n        \"city\": \"ahmedabad\",\n        \"id\": \"aed505ea-f8b0-4ccb-8f9a-211532337c7e\",\n        \"is_active\": true\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "update theatre",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"area\": \"Bodakdev\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/admin/theatre/update/{{THEATRE_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "theatre",
+                "update",
+                "{{THEATRE_ID}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "update theatre",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"area\": \"Bodakdev\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/theatre/update/{{THEATRE_ID}}",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "theatre",
+                    "update",
+                    "{{THEATRE_ID}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 17:50:17 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "187"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Theatre updated successfully\",\n    \"data\": {\n        \"name\": \"pvr acropolis\",\n        \"area\": \"bodakdev\",\n        \"city\": \"ahmedabad\",\n        \"id\": \"aed505ea-f8b0-4ccb-8f9a-211532337c7e\",\n        \"is_active\": true\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "update movie",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"rating\": 7.8,\r\n  \"genre\": \"Action, Crime, Drama, Thriller\"\r\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/admin/movie/update/{{MOVIE_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "movie",
+                "update",
+                "{{MOVIE_ID}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "update movie",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"rating\": 7.8,\r\n  \"genre\": \"Action, Crime, Drama, Thriller\"\r\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/movie/update/{{MOVIE_ID}}",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "movie",
+                    "update",
+                    "{{MOVIE_ID}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 17:51:04 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "401"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Movie updated successfully\",\n    \"data\": {\n        \"name\": \"one battle after another\",\n        \"description\": \"when their enemy resurfaces after 16 years, a group of ex-revolutionaries reunite to rescue the daughter of one of their own.\",\n        \"rating\": 7.8,\n        \"genre\": \"action, crime, drama, thriller\",\n        \"imdb_id\": \"tt30144839\",\n        \"id\": \"3cba0604-652c-4bd2-8a11-243c5165ed65\",\n        \"duration\": \"PT2H41M\",\n        \"is_deleted\": false\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "get all users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/admin/users?page=1&size=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get all users",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/users?page=1&size=10",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "users"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 17:52:34 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "672"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Users fetched successfully\",\n    \"data\": [\n        {\n            \"id\": \"aea60848-5dc4-43ac-a6bd-92fa6e90d1b2\",\n            \"email\": \"jaymin4724@gmail.com\",\n            \"is_active\": true,\n            \"role\": \"theatre_admin\",\n            \"google_id\": null,\n            \"user_detail\": null\n        },\n        {\n            \"id\": \"89ebc545-6f98-4bfd-b572-a5fb30098f4f\",\n            \"email\": \"jaymindrive2023@gmail.com\",\n            \"is_active\": true,\n            \"role\": \"user\",\n            \"google_id\": null,\n            \"user_detail\": null\n        },\n        {\n            \"id\": \"9e5e3680-ead7-4613-9021-7faf37e7390e\",\n            \"email\": \"jaymindrive01@gmail.com\",\n            \"is_active\": true,\n            \"role\": \"admin\",\n            \"google_id\": null,\n            \"user_detail\": null\n        },\n        {\n            \"id\": \"cdf751ad-a85e-4ca2-94be-3e2851106c9a\",\n            \"email\": \"jaymindrive2024@gmail.com\",\n            \"is_active\": true,\n            \"role\": \"theatre_admin\",\n            \"google_id\": null,\n            \"user_detail\": null\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "get all theatres",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/admin/theatres?page=1&size=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "theatres"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get all theatres",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/theatres?page=1&size=10",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "theatres"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 17:53:46 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "190"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Theatres fetched successfully\",\n    \"data\": [\n        {\n            \"name\": \"pvr acropolis\",\n            \"area\": \"bodakdev\",\n            \"city\": \"ahmedabad\",\n            \"id\": \"aed505ea-f8b0-4ccb-8f9a-211532337c7e\",\n            \"is_active\": true\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "get all movies",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/admin/movies?page=1&size=2",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "admin",
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "2"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get all movies",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/admin/movies?page=1&size=2",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "movies"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "2"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 17:54:35 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "809"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Movies fetched successfully\",\n    \"data\": [\n        {\n            \"name\": \"project hail mary\",\n            \"description\": \"a science teacher wakes up alone on a spaceship. as his memory returns, he uncovers a mission to stop a mysterious substance killing earth's sun, and realizes that an unexpected friendship may be the key.\",\n            \"rating\": 8.3,\n            \"genre\": \"adventure, comedy, drama\",\n            \"imdb_id\": \"tt12042730\",\n            \"id\": \"cfa66a0c-1a67-4eb5-8f32-de5a8f508a38\",\n            \"duration\": \"PT2H36M\",\n            \"is_deleted\": false\n        },\n        {\n            \"name\": \"one battle after another\",\n            \"description\": \"when their enemy resurfaces after 16 years, a group of ex-revolutionaries reunite to rescue the daughter of one of their own.\",\n            \"rating\": 7.8,\n            \"genre\": \"action, crime, drama, thriller\",\n            \"imdb_id\": \"tt30144839\",\n            \"id\": \"3cba0604-652c-4bd2-8a11-243c5165ed65\",\n            \"duration\": \"PT2H41M\",\n            \"is_deleted\": false\n        }\n    ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 theatre admin",
+      "item": [
+        {
+          "name": "get my theatres",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/theatre-admin/my-theatres?page=1&size=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "theatre-admin",
+                "my-theatres"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get my theatres",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/theatre-admin/my-theatres?page=1&size=10",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "theatre-admin",
+                    "my-theatres"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 17:58:03 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "190"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Theatres fetched successfully\",\n    \"data\": [\n        {\n            \"name\": \"pvr acropolis\",\n            \"area\": \"bodakdev\",\n            \"city\": \"ahmedabad\",\n            \"id\": \"aed505ea-f8b0-4ccb-8f9a-211532337c7e\",\n            \"is_active\": true\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "create layout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Audi 1 Standard Layout\",\r\n  \"theatre_id\": \"{{THEATRE_ID}}\",\r\n  \"layout\": {\r\n    \"metadata\": { \"grid_rows\": 3, \"grid_columns\": 4 },\r\n    \"layout\": [\r\n      [\r\n        { \"grid_type\": \"seat\", \"category\": \"premium\" },\r\n        { \"grid_type\": \"seat\", \"category\": \"premium\" },\r\n        null,\r\n        { \"grid_type\": \"seat\", \"category\": \"premium\" }\r\n      ],\r\n      [\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" },\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" },\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" },\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" }\r\n      ],\r\n      [\r\n        { \"grid_type\": \"gap\", \"category\": null },\r\n        null,\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" },\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" }\r\n      ]\r\n    ]\r\n  }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/theatre-admin/create-layout",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "theatre-admin",
+                "create-layout"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "create layout",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Audi 1 Standard Layout\",\r\n  \"theatre_id\": \"{{THEATRE_ID}}\",\r\n  \"layout\": {\r\n    \"metadata\": { \"grid_rows\": 3, \"grid_columns\": 4 },\r\n    \"layout\": [\r\n      [\r\n        { \"grid_type\": \"seat\", \"category\": \"premium\" },\r\n        { \"grid_type\": \"seat\", \"category\": \"premium\" },\r\n        null,\r\n        { \"grid_type\": \"seat\", \"category\": \"premium\" }\r\n      ],\r\n      [\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" },\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" },\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" },\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" }\r\n      ],\r\n      [\r\n        { \"grid_type\": \"gap\", \"category\": null },\r\n        null,\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" },\r\n        { \"grid_type\": \"seat\", \"category\": \"standard\" }\r\n      ]\r\n    ]\r\n  }\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/theatre-admin/create-layout",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "theatre-admin",
+                    "create-layout"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 17:59:17 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "959"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"New layout created successfully\",\n    \"data\": {\n        \"id\": \"e1ff221d-0a24-4ff3-8e7e-faeb91e9fabe\",\n        \"layout\": {\n            \"layout\": [\n                [\n                    {\n                        \"grid_type\": \"seat\",\n                        \"seat_number\": \"A1\",\n                        \"category\": \"premium\"\n                    },\n                    {\n                        \"grid_type\": \"seat\",\n                        \"seat_number\": \"A2\",\n                        \"category\": \"premium\"\n                    },\n                    null,\n                    {\n                        \"grid_type\": \"seat\",\n                        \"seat_number\": \"A3\",\n                        \"category\": \"premium\"\n                    }\n                ],\n                [\n                    {\n                        \"grid_type\": \"seat\",\n                        \"seat_number\": \"B1\",\n                        \"category\": \"standard\"\n                    },\n                    {\n                        \"grid_type\": \"seat\",\n                        \"seat_number\": \"B2\",\n                        \"category\": \"standard\"\n                    },\n                    {\n                        \"grid_type\": \"seat\",\n                        \"seat_number\": \"B3\",\n                        \"category\": \"standard\"\n                    },\n                    {\n                        \"grid_type\": \"seat\",\n                        \"seat_number\": \"B4\",\n                        \"category\": \"standard\"\n                    }\n                ],\n                [\n                    {\n                        \"grid_type\": \"gap\",\n                        \"seat_number\": null,\n                        \"category\": null\n                    },\n                    null,\n                    {\n                        \"grid_type\": \"seat\",\n                        \"seat_number\": \"C1\",\n                        \"category\": \"standard\"\n                    },\n                    {\n                        \"grid_type\": \"seat\",\n                        \"seat_number\": \"C2\",\n                        \"category\": \"standard\"\n                    }\n                ]\n            ],\n            \"category\": [\n                \"premium\",\n                \"standard\"\n            ],\n            \"seat_mapping\": {\n                \"A1\": [\n                    0,\n                    0\n                ],\n                \"A2\": [\n                    0,\n                    1\n                ],\n                \"A3\": [\n                    0,\n                    3\n                ],\n                \"B1\": [\n                    1,\n                    0\n                ],\n                \"B2\": [\n                    1,\n                    1\n                ],\n                \"B3\": [\n                    1,\n                    2\n                ],\n                \"B4\": [\n                    1,\n                    3\n                ],\n                \"C1\": [\n                    2,\n                    2\n                ],\n                \"C2\": [\n                    2,\n                    3\n                ]\n            },\n            \"metadata\": {\n                \"row\": 3,\n                \"column\": 4,\n                \"total_seats\": 9\n            }\n        }\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "update layout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Audi 1 Layout v2\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/theatre-admin/layout/update/{{LAYOUT_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "theatre-admin",
+                "layout",
+                "update",
+                "{{LAYOUT_ID}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "update layout",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Audi 1 Layout v2\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/theatre-admin/layout/update/{{LAYOUT_ID}}",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "theatre-admin",
+                    "layout",
+                    "update",
+                    "{{LAYOUT_ID}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:00:55 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "135"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Layout updated successfully\",\n    \"data\": {\n        \"id\": \"e1ff221d-0a24-4ff3-8e7e-faeb91e9fabe\",\n        \"name\": \"audi 1 layout v2\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "create screen",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Audi 1\",\r\n  \"theatre_id\": \"{{THEATRE_ID}}\",\r\n  \"layout_id\": \"{{LAYOUT_ID}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/theatre-admin/create-screen",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "theatre-admin",
+                "create-screen"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "create screen",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Audi 1\",\r\n  \"theatre_id\": \"{{THEATRE_ID}}\",\r\n  \"layout_id\": \"{{LAYOUT_ID}}\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/theatre-admin/create-screen",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "theatre-admin",
+                    "create-screen"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:04:44 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "228"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Screen created successfully\",\n    \"data\": {\n        \"name\": \"audi 1\",\n        \"theatre_id\": \"aed505ea-f8b0-4ccb-8f9a-211532337c7e\",\n        \"layout_id\": \"e1ff221d-0a24-4ff3-8e7e-faeb91e9fabe\",\n        \"id\": \"7ca95a9c-b390-4ccc-a946-2b9a2767ffe6\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "get my screens",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/theatre-admin/my-screens?page=1&size=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "theatre-admin",
+                "my-screens"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get my screens",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/theatre-admin/my-screens?page=1&size=10",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "theatre-admin",
+                    "my-screens"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:05:48 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "295"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Screens fetched successfully\",\n    \"data\": [\n        {\n            \"id\": \"7ca95a9c-b390-4ccc-a946-2b9a2767ffe6\",\n            \"name\": \"audi 1\",\n            \"theatre_id\": \"aed505ea-f8b0-4ccb-8f9a-211532337c7e\",\n            \"theatre_name\": \"pvr acropolis\",\n            \"layout_id\": \"e1ff221d-0a24-4ff3-8e7e-faeb91e9fabe\",\n            \"layout_name\": \"audi 1 layout v2\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "update screen",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Audi 1 IMAX\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/theatre-admin/screen/update/{{​SCREEN_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "theatre-admin",
+                "screen",
+                "update",
+                "{{​SCREEN_ID}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "update screen",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text",
+                    "disabled": true
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"name\": \"Audi 1 IMAX\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/theatre-admin/screen/update/{{​SCREEN_ID}}",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "theatre-admin",
+                    "screen",
+                    "update",
+                    "{{​SCREEN_ID}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:18:38 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "233"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Screen updated successfully\",\n    \"data\": {\n        \"name\": \"audi 1 imax\",\n        \"theatre_id\": \"aed505ea-f8b0-4ccb-8f9a-211532337c7e\",\n        \"layout_id\": \"e1ff221d-0a24-4ff3-8e7e-faeb91e9fabe\",\n        \"id\": \"7ca95a9c-b390-4ccc-a946-2b9a2767ffe6\"\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "create show",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"start_time\": \"2026-07-15T15:00:00\",\r\n  \"screen_id\": \"{{​SCREEN_ID}}\",\r\n  \"movie_id\": \"{{MOVIE_ID_2​}}\",\r\n  \"category_price\": { \"premium\": 400.0, \"standard\": 200.0 }\r\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/theatre-admin/create-show/",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "theatre-admin",
+                "create-show",
+                ""
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "create show",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"start_time\": \"2026-07-15T14:30:00\",\r\n  \"screen_id\": \"{{SCREEN_ID}}\",\r\n  \"movie_id\": \"{{MOVIE_ID}}\",\r\n  \"category_price\": {\r\n    \"premium\": 450.0,\r\n    \"standard\": 220.0\r\n  }\r\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/theatre-admin/create-show",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "theatre-admin",
+                    "create-show"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "",
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:22:44 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "316"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [
+                {
+                  "expires": "Invalid Date",
+                  "domain": "",
+                  "path": ""
+                }
+              ],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Show created successfully\",\n    \"data\": {\n        \"id\": \"14a3b6ea-3d0d-4a59-819f-f3726186f714\",\n        \"start_time\": \"2026-07-15T14:30:00\",\n        \"screen_id\": \"7ca95a9c-b390-4ccc-a946-2b9a2767ffe6\",\n        \"movie_id\": \"3cba0604-652c-4bd2-8a11-243c5165ed65\",\n        \"category_pricing\": {\n            \"premium\": 450,\n            \"standard\": 220\n        },\n        \"is_deleted\": false\n    }\n}"
+            },
+            {
+              "name": "overlapping create show",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"start_time\": \"2026-07-15T15:00:00\",\r\n  \"screen_id\": \"{{​SCREEN_ID}}\",\r\n  \"movie_id\": \"{{MOVIE_ID_2​}}\",\r\n  \"category_price\": { \"premium\": 400.0, \"standard\": 200.0 }\r\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/theatre-admin/create-show/",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "theatre-admin",
+                    "create-show",
+                    ""
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:29:00 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "51"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"detail\": \"Show is overlapping with previous show\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "update show",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"category_price\": { \"premium\": 500.0, \"standard\": 250.0 }\r\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/theatre-admin/show/update/{{SHOW_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "theatre-admin",
+                "show",
+                "update",
+                "{{SHOW_ID}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "update show",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"category_price\": { \"premium\": 500.0, \"standard\": 250.0 }\r\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/theatre-admin/show/update/{{SHOW_ID}}",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "theatre-admin",
+                    "show",
+                    "update",
+                    "{{SHOW_ID}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:30:02 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "316"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Show updated successfully\",\n    \"data\": {\n        \"id\": \"14a3b6ea-3d0d-4a59-819f-f3726186f714\",\n        \"start_time\": \"2026-07-15T14:30:00\",\n        \"screen_id\": \"7ca95a9c-b390-4ccc-a946-2b9a2767ffe6\",\n        \"movie_id\": \"3cba0604-652c-4bd2-8a11-243c5165ed65\",\n        \"category_pricing\": {\n            \"premium\": 500,\n            \"standard\": 250\n        },\n        \"is_deleted\": false\n    }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5 search",
+      "item": [
+        {
+          "name": "search",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/search/?q=one&limit=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "search",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "one"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "search",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/search/?q=one&limit=10",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "search",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "one"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:32:54 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "212"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Search results retrieved successfully\",\n    \"data\": {\n        \"items\": [\n            {\n                \"name\": \"One Battle After Another\",\n                \"type\": \"movie\",\n                \"db_id\": \"3cba0604-652c-4bd2-8a11-243c5165ed65\",\n                \"score\": 0.86312973\n            }\n        ],\n        \"total\": 1\n    }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6 users browse",
+      "item": [
+        {
+          "name": "movies in a theatre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/users/theatre/{{THEATRE_ID}}/movies?page=1&size=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "theatre",
+                "{{THEATRE_ID}}",
+                "movies"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "movies in a theatre",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/theatre/{{THEATRE_ID}}/movies?page=1&size=10",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "theatre",
+                    "{{THEATRE_ID}}",
+                    "movies"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:33:54 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "430"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Movies for the specified theatre fetched successfully\",\n    \"data\": [\n        {\n            \"name\": \"one battle after another\",\n            \"description\": \"when their enemy resurfaces after 16 years, a group of ex-revolutionaries reunite to rescue the daughter of one of their own.\",\n            \"rating\": 7.8,\n            \"genre\": \"action, crime, drama, thriller\",\n            \"imdb_id\": \"tt30144839\",\n            \"id\": \"3cba0604-652c-4bd2-8a11-243c5165ed65\",\n            \"duration\": \"PT2H41M\",\n            \"is_deleted\": false\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "theatres available for a movie",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/users/movie/{{MOVIE_ID}}/theatres?page=1&size=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "movie",
+                "{{MOVIE_ID}}",
+                "theatres"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "theatres for a movie",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/movie/{{MOVIE_ID}}/theatres?page=1&size=10",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "movie",
+                    "{{MOVIE_ID}}",
+                    "theatres"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:35:06 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "211"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Theatres screening this movie fetched successfully\",\n    \"data\": [\n        {\n            \"name\": \"pvr acropolis\",\n            \"area\": \"bodakdev\",\n            \"city\": \"ahmedabad\",\n            \"id\": \"aed505ea-f8b0-4ccb-8f9a-211532337c7e\",\n            \"is_active\": true\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "list of movies in a theatre",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/users/theatre/{{THEATRE_ID}}/movie/{{MOVIE_ID}}?page=1&size=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "theatre",
+                "{{THEATRE_ID}}",
+                "movie",
+                "{{MOVIE_ID}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "list of movies in a theatre",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/theatre/{{THEATRE_ID}}/movie/{{MOVIE_ID}}?page=1&size=10",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "theatre",
+                    "{{THEATRE_ID}}",
+                    "movie",
+                    "{{MOVIE_ID}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:36:19 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "455"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Available shows for this movie and theatre fetched successfully\",\n    \"data\": [\n        {\n            \"id\": \"14a3b6ea-3d0d-4a59-819f-f3726186f714\",\n            \"start_time\": \"2026-07-15T14:30:00\",\n            \"screen_id\": \"7ca95a9c-b390-4ccc-a946-2b9a2767ffe6\",\n            \"movie_id\": \"3cba0604-652c-4bd2-8a11-243c5165ed65\",\n            \"category_pricing\": {\n                \"premium\": 500,\n                \"standard\": 250\n            },\n            \"is_deleted\": false,\n            \"movie_name\": \"One Battle After Another\",\n            \"theatre_name\": \"pvr acropolis\",\n            \"screen_name\": \"audi 1 imax\"\n        }\n    ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7 users booking",
+      "item": [
+        {
+          "name": "get show seats",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/users/show/{{SHOW_ID}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "show",
+                "{{SHOW_ID}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get show seats",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/show/{{SHOW_ID}}",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "show",
+                    "{{SHOW_ID}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:58:02 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "1258"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Show details fetched successfully\",\n    \"data\": {\n        \"layout\": [\n            [\n                {\n                    \"category\": \"premium\",\n                    \"grid_type\": \"seat\",\n                    \"seat_number\": \"A1\",\n                    \"price\": 500,\n                    \"status\": \"Available\"\n                },\n                {\n                    \"category\": \"premium\",\n                    \"grid_type\": \"seat\",\n                    \"seat_number\": \"A2\",\n                    \"price\": 500,\n                    \"status\": \"Available\"\n                },\n                null,\n                {\n                    \"category\": \"premium\",\n                    \"grid_type\": \"seat\",\n                    \"seat_number\": \"A3\",\n                    \"price\": 500,\n                    \"status\": \"Available\"\n                }\n            ],\n            [\n                {\n                    \"category\": \"standard\",\n                    \"grid_type\": \"seat\",\n                    \"seat_number\": \"B1\",\n                    \"price\": 250,\n                    \"status\": \"Available\"\n                },\n                {\n                    \"category\": \"standard\",\n                    \"grid_type\": \"seat\",\n                    \"seat_number\": \"B2\",\n                    \"price\": 250,\n                    \"status\": \"Available\"\n                },\n                {\n                    \"category\": \"standard\",\n                    \"grid_type\": \"seat\",\n                    \"seat_number\": \"B3\",\n                    \"price\": 250,\n                    \"status\": \"Available\"\n                },\n                {\n                    \"category\": \"standard\",\n                    \"grid_type\": \"seat\",\n                    \"seat_number\": \"B4\",\n                    \"price\": 250,\n                    \"status\": \"Available\"\n                }\n            ],\n            [\n                {\n                    \"category\": null,\n                    \"grid_type\": \"gap\",\n                    \"seat_number\": null\n                },\n                null,\n                {\n                    \"category\": \"standard\",\n                    \"grid_type\": \"seat\",\n                    \"seat_number\": \"C1\",\n                    \"price\": 250,\n                    \"status\": \"Available\"\n                },\n                {\n                    \"category\": \"standard\",\n                    \"grid_type\": \"seat\",\n                    \"seat_number\": \"C2\",\n                    \"price\": 250,\n                    \"status\": \"Available\"\n                }\n            ]\n        ],\n        \"metadata\": {\n            \"row\": 3,\n            \"column\": 4,\n            \"total_seats\": 9,\n            \"booked_seats\": 0\n        },\n        \"category_pricing\": {\n            \"premium\": 500,\n            \"standard\": 250\n        },\n        \"seat_mapping\": {\n            \"A1\": [\n                0,\n                0\n            ],\n            \"A2\": [\n                0,\n                1\n            ],\n            \"A3\": [\n                0,\n                3\n            ],\n            \"B1\": [\n                1,\n                0\n            ],\n            \"B2\": [\n                1,\n                1\n            ],\n            \"B3\": [\n                1,\n                2\n            ],\n            \"B4\": [\n                1,\n                3\n            ],\n            \"C1\": [\n                2,\n                2\n            ],\n            \"C2\": [\n                2,\n                3\n            ]\n        }\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "seat lock",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"seat_array\": [\"A1\", \"A2\", \"B1\"]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/users/show/{{SHOW_ID}}/seat-lock",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "show",
+                "{{SHOW_ID}}",
+                "seat-lock"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "seat lock",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"seat_array\": [\"A1\", \"A2\", \"B1\"]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/show/{{SHOW_ID}}/seat-lock",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "show",
+                    "{{SHOW_ID}}",
+                    "seat-lock"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 19:01:25 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "66"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Seats Locked Successfully\",\n    \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "seat booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"seat_array\": [\"A1\", \"A2\", \"B1\"]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/users/show/{{SHOW_ID}}/seat-book",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "show",
+                "{{SHOW_ID}}",
+                "seat-book"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "seat booking",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"seat_array\": [\"A1\", \"A2\", \"B1\"]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/show/{{SHOW_ID}}/seat-book",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "show",
+                    "{{SHOW_ID}}",
+                    "seat-book"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 19:02:22 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "137"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Tickets Booked Successfully\",\n    \"data\": {\n        \"booking_id\": \"297bb807-5cb9-4c41-9559-51d3b687782a\",\n        \"total_paid\": 1250\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "booking history",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/users/bookings?page=1&size=10",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "bookings"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "booking history",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/bookings?page=1&size=10",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "bookings"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "size",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 19:03:59 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "383"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Booking history fetched successfully\",\n    \"data\": [\n        {\n            \"id\": \"297bb807-5cb9-4c41-9559-51d3b687782a\",\n            \"show_id\": \"14a3b6ea-3d0d-4a59-819f-f3726186f714\",\n            \"total_bill\": 1250,\n            \"number_of_seats\": 3,\n            \"is_cancelled\": false,\n            \"created_at\": \"2026-07-13T19:02:22.823028\",\n            \"movie_name\": \"One Battle After Another\",\n            \"theatre_name\": \"pvr acropolis\",\n            \"show_start_time\": \"2026-07-15T14:30:00\"\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "get per seat detail",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/users/bookings/{{​​BOOKING_ID​}}",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "bookings",
+                "{{​​BOOKING_ID​}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get per seat detail",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/bookings/{{​​BOOKING_ID​}}",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "bookings",
+                    "{{​​BOOKING_ID​}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 19:08:18 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "519"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Booking detail fetched successfully\",\n    \"data\": {\n        \"id\": \"297bb807-5cb9-4c41-9559-51d3b687782a\",\n        \"show_id\": \"14a3b6ea-3d0d-4a59-819f-f3726186f714\",\n        \"total_bill\": 1250,\n        \"number_of_seats\": 3,\n        \"is_cancelled\": false,\n        \"created_at\": \"2026-07-13T19:02:22.823028\",\n        \"movie_name\": \"One Battle After Another\",\n        \"theatre_name\": \"pvr acropolis\",\n        \"show_start_time\": \"2026-07-15T14:30:00\",\n        \"seats\": [\n            {\n                \"seats_number\": \"A1\",\n                \"is_cancelled\": false\n            },\n            {\n                \"seats_number\": \"A2\",\n                \"is_cancelled\": false\n            },\n            {\n                \"seats_number\": \"B1\",\n                \"is_cancelled\": false\n            }\n        ]\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "verify booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"ticket_hash\": \"{{TICKET_HASH}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/theatre-admin/verify-ticket",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "theatre-admin",
+                "verify-ticket"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "verify booking",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"ticket_hash\": \"{{TICKET_HASH}}\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/theatre-admin/verify-ticket",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "theatre-admin",
+                    "verify-ticket"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 19:11:52 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "69"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Ticket verified successfully\",\n    \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8 users profile & acc",
+      "item": [
+        {
+          "name": "get your profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/users/me",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get your profile",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/me",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "me"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:38:37 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "217"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Profile fetched successfully\",\n    \"data\": {\n        \"id\": \"aea60848-5dc4-43ac-a6bd-92fa6e90d1b2\",\n        \"email\": \"jaymin4724@gmail.com\",\n        \"is_active\": true,\n        \"role\": \"theatre_admin\",\n        \"google_id\": null,\n        \"user_detail\": null\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "update your profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{TA_ACCESS_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"first_name\": \"Jaymin\",\r\n  \"last_name\": \"Dave\",\r\n  \"mobile_no\": \"+919876543210\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/v1/users/me",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "update your profile",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n  \"first_name\": \"Jaymin\",\r\n  \"last_name\": \"Dave\",\r\n  \"mobile_no\": \"+919876543210\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/v1/users/me",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "users",
+                    "me"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "date",
+                  "value": "Mon, 13 Jul 2026 18:39:30 GMT"
+                },
+                {
+                  "key": "server",
+                  "value": "uvicorn"
+                },
+                {
+                  "key": "content-length",
+                  "value": "283"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Profile updated successfully\",\n    \"data\": {\n        \"id\": \"aea60848-5dc4-43ac-a6bd-92fa6e90d1b2\",\n        \"email\": \"jaymin4724@gmail.com\",\n        \"is_active\": true,\n        \"role\": \"theatre_admin\",\n        \"google_id\": null,\n        \"user_detail\": {\n            \"first_name\": \"Jaymin\",\n            \"last_name\": \"Dave\",\n            \"mobile_no\": \"+919876543210\"\n        }\n    }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": ""
+    },
+    {
+      "key": "OTP",
+      "value": ""
+    },
+    {
+      "key": "USER_EMAIL",
+      "value": ""
+    },
+    {
+      "key": "ACCESS_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "REFRESH_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "ADMIN_ACCESS_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "ADMIN_REFRESH_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "TA_ACCESS_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "TA_REFRESH_TOKEN",
+      "value": ""
+    },
+    {
+      "key": "USER_ID",
+      "value": ""
+    },
+    {
+      "key": "MOVIE_ID",
+      "value": ""
+    },
+    {
+      "key": "MOVIE_ID_2​",
+      "value": ""
+    },
+    {
+      "key": "THEATRE_ID",
+      "value": ""
+    },
+    {
+      "key": "LAYOUT_ID",
+      "value": ""
+    },
+    {
+      "key": "​SCREEN_ID",
+      "value": ""
+    },
+    {
+      "key": "SHOW_ID",
+      "value": ""
+    },
+    {
+      "key": "​​SHOW_ID_CANCEL​",
+      "value": ""
+    },
+    {
+      "key": "​​BOOKING_ID​",
+      "value": ""
+    },
+    {
+      "key": "​​BOOKING_ID_CANCEL​",
+      "value": ""
+    },
+    {
+      "key": "TICKET_HASH",
+      "value": ""
+    }
+  ]
+}
