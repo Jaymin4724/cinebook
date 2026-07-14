@@ -437,3 +437,56 @@ Records every reporting interval.
 * The rate limiter is per client IP. Since all Locust traffic originates from the same machine, every virtual user shares the same token bucket.
 * Keep `ENV=TESTING` for booking benchmarks to prevent throttling from affecting throughput measurements.
 * `loadtest_data.json` and everything inside `loadtest/reports/` are generated artifacts and should be added to `.gitignore`.
+
+---
+
+# Results — Achieved Metrics (2026-07-14)
+
+Runs against `uvicorn` (1 worker), Postgres `cinebook-tests`, a 600-seat show, 50 seeded users. Locust and the app ran on the same host, so reported times are effectively server-side latency (no network RTT).
+
+## Whole-app latency (`FullAppUser`)
+
+`--users 50 --spawn-rate 10 --run-time 90s`, limiter off (`ENV=TESTING`).
+
+| Metric | Reqs | Avg | Median | p90 | p95 | p99 | Max | RPS |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Aggregated | 2,124 | 41 ms | 30 ms | 71 ms | 92 ms | 180 ms | 535 ms | 24.2 |
+
+**0 failures.** Per-endpoint average: search 23 ms, health 27 ms, theatres-by-movie 39 ms, movies-by-theatre 42 ms, shows 43 ms, show details 46 ms, booking history 49 ms, profile 52 ms. The 535 ms tail is seat-layout cache warm-up on the first hit of a show.
+
+## Seat booking under contention (`SeatBookingUser`)
+
+`--users 60 --spawn-rate 15 --run-time 90s`, limiter off, lock → book race on the 600-seat show.
+
+* **Bookings committed:** 220 (₹36,000) · **Double-booked seats: 0** (verified directly in Postgres)
+* **Server errors: 0 / 1,271** — all contention resolved as expected `400`/`403`/`409`
+
+| Endpoint | Reqs | Avg | Median | p95 | Max |
+| --- | --- | --- | --- | --- | --- |
+| POST seat-lock | 271 | 2,402 ms | 2,300 ms | 4,100 ms | 5,700 ms |
+| POST seat-book | 243 | 3,056 ms | 2,700 ms | 5,300 ms | 6,826 ms |
+| GET show details | 757 | 2,304 ms | 2,200 ms | 4,200 ms | 5,294 ms |
+| **Aggregated** | 1,271 | **2,469 ms** | 2,400 ms | 4,500 ms | 6,826 ms |
+
+Correctness held perfectly under contention — atomic Lua `acquire_seat_locks` plus the partial-unique index kept every seat single-owner across 60 racing users.
+
+## Rate limiter (`RateLimitUser`)
+
+`--users 20 --spawn-rate 20 --run-time 25s`, limiter on (`ENV=PRODUCTION`), token bucket capacity 10 / refill 0.1 per s, all traffic sharing one IP bucket.
+
+| Outcome | Count | Share |
+| --- | --- | --- |
+| Passed (2xx) | 42 | 0.7% |
+| Rate-limited (429) | 5,899 | 99.3% |
+| **Total probes** | **5,941** | 100% (~240 rps for 25s) |
+
+The limiter clamped a 240 rps flood to a trickle.
+
+## Summary
+
+| Area | Result |
+| --- | --- |
+| Booking integrity | 0 double-booked / 220 committed — pass |
+| Whole-app latency | 41 ms avg, 92 ms p95, 0 failures / 2,124 reqs |
+| Rate limiter | 99.3% of flood correctly throttled to 429 |
+| Booking latency under load | 2.47 s avg aggregated |
