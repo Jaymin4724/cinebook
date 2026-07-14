@@ -76,6 +76,7 @@ Core: `user_model`, `user_detail_model`, `role_model`, `permission_model`, `role
 | `helper.py` | JWT (`_generate_token`, `decode_token`, `generate_access_token_and_refresh_token`), OTP (`generate_otp`, `validate_otp`), Fernet encryption (`encrypt_data`, `decrypt_data`) |
 | `polish_seat_layout.py` | Seat layout transformation/polishing |
 | `show_create_validation.py` | Show timing / overlap / pricing validation |
+| `seat_lock_script.py` | Atomic Redis Lua seat-lock (`ACQUIRE_SEAT_LOCKS_SCRIPT`, `acquire_seat_locks`, `SEAT_LOCK_TTL_SECONDS`) — all-or-nothing lock of a seat set for a show |
 
 ### Middleware — `app/middlewares/`
 `global_exception_handler_middleware.py`, `rate_limiting_middleware.py` (token bucket; skipped when `ENV=TESTING`). Exported via `__init__.py`, registered in `main.py`.
@@ -88,6 +89,9 @@ Versions in `alembic/versions/`. Config `alembic.ini`, env `alembic/env.py`. New
 
 ### Tests — `tests/`
 `conftest.py` (fixtures), `database.py` (test DB), `fake_redis.py` (fakeredis). Suites: `test_auth.py`, `test_admin.py`, `test_theatre_admin.py`, `test_user.py`, `test_utils.py`. Config: `pytest.ini` (async auto mode). Run: `uv run pytest`.
+
+### Load tests — `loadtest/`
+Locust load tests (not part of the pytest suite). `seed_loadtest_data.py` seeds a fresh bookable show + user pool into `TEST_DB_URL` → `loadtest_data.json`; `locustfile.py` defines `SeatBookingUser` (lock→book), `FullAppUser` (read latency), `RateLimitUser` (token-bucket limiter). Reports land in `loadtest/reports/`. See `loadtest/README.md`. `loadtest_data.json` and `reports/` are git-ignored throwaway artifacts.
 
 ## Conventions
 

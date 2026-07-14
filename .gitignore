@@ -5,3 +5,5 @@ venv
 !.env.docker.example
 pitch.txt
 .coverage
+loadtest/loadtest_data.json
+loadtest/reports/
